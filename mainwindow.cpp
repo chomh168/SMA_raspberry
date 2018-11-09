@@ -313,6 +313,7 @@ void MainWindow::invslot()
 
     }
 
+    //QtConcurrent::run(MainWindow::SMSReceive);
 
 
 
@@ -320,13 +321,17 @@ void MainWindow::invslot()
 
 void MainWindow::SMSReceive()
 {
-    QThread::sleep(2);
+    //QThread::sleep(2);
 
     char CMGR[12] = {0x41, 0x54 , 0x2B , 0x43 , 0x4D , 0x47 , 0x52 , 0x3D , 0x30 , 0x0D};
-    char CNMI0[18] = {0x41, 0x54 , 0x2b , 0x43 , 0x4e , 0x4d , 0x49 , 0x3d , 0x32 , 0x2c , 0x30 , 0x2c , 0x30 , 0x2c , 0x30 , 0x0d}; //off
-    char CNMI1[18] = {0x41, 0x54 , 0x2b , 0x43 , 0x4e , 0x4d , 0x49 , 0x3d , 0x32 , 0x2c , 0x30 , 0x2c , 0x30 , 0x2c , 0x31 , 0x0d}; //on
+
     char CNUM[10] = {0x41, 0x54 , 0x24 , 0x24 , 0x43 , 0x4e , 0x55 , 0x4d , 0x0d};
+
     char CMGD[12] = {0x41, 0x54, 0x2B, 0x43, 0x4D, 0x47, 0x44, 0x3D, 0x30, 0x0D};
+
+    char SMSW[60] = {0x41, 0x54 , 0x24 , 0x24, 0x53 , 0x4D , 0x53 , 0x57 , 0x3D , 0x22 , 0x30 , 0x31 , 0x30 , 0x35 , 0x35 , 0x37 , 0x37 , 0x37 , 0x36 , 0x32 , 0x37 , 0x22 , 0x2C , 0x22 , 0x30 , 0x31 , 0x32 , 0x32 , 0x39 , 0x31 , 0x38 , 0x36 , 0x36 , 0x32 , 0x32 , 0x22 , 0x2C , 0x30 , 0x2C , 0x30 , 0x2C , 0x30 , 0x2C , 0x31 , 0x33 , 0x32 , 0x0D};
+
+    char MSG[6] = {0x4F, 0x4B, 0x1A, 0x0D};
 
     char rxbuffer[256] = {0,};
     int fd;
@@ -338,8 +343,35 @@ void MainWindow::SMSReceive()
             qDebug()<<"err:not Open";
         }
         serialFlush(fd);
-    //serialPuts(fd,CNMI0);
-    serialPuts(fd,CMGR);
+
+    serialPuts(fd,CNUM);
+
+    QThread::sleep(2);
+
+        while(serialDataAvail(fd)!=NULL)
+        {
+            system("sudo chmod 777 /dev/ttyAMA0");
+            buf = serialGetchar(fd);
+            rxbuffer[count]=buf;
+            count++;
+        }
+
+        serialFlush(fd);
+        QString str = QString(rxbuffer);
+
+        qDebug()<<str;
+
+        if(str.indexOf("8212")>0)
+        {
+            for(int i = 0;i<8;i++)
+            {
+                SMSW[27+i] = str.at(str.indexOf("8212")+4+i).toLatin1();
+            }
+        }
+
+        serialPuts(fd,CMGR);
+        qDebug()<<SMSW;
+
     QThread::sleep(2);
 
         while(serialDataAvail(fd)!=NULL)
@@ -351,10 +383,39 @@ void MainWindow::SMSReceive()
         }
 
         QString feed = QString(rxbuffer);
-        //if(feed.indexOf("CMGR")>0)
             qDebug()<<feed;
 
+    if(feed.indexOf("010")>0)
+    {
+        for(int i =0;i<11;i++)
+        {
+            SMSW[10+i] = feed.at(feed.indexOf("010")+i).toLatin1();
+        }
+
+    }
+
+    if(feed.indexOf("5339383230")>0)
+    {
+        serialPuts(fd,SMSW);
+
+        QThread::sleep(2);
+        while(serialDataAvail(fd)!=NULL)
+        {
+            system("sudo chmod 777 /dev/ttyAMA0");
+            buf = serialGetchar(fd);
+            rxbuffer[count]=buf;
+            count++;
+        }
+        qDebug()<<rxbuffer;
+
+        serialPuts(fd,MSG);
+    }
+
+    QThread::sleep(1);
+
     serialPuts(fd,CMGD);
+
+    QThread::sleep(1);
 
     serialFlush(fd);
     serialClose(fd);
@@ -1126,13 +1187,13 @@ void MainWindow::send_ok()
 
     if(wcdma_error==true)
     {
-        setFileLog("wcmda error");
+        setFileLog("wcdma error");
         QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
         send_watcher.setFuture(th5);
     }
     else
     {
-        //QtConcurrent::run(MainWindow::SMSReceive);
+        QtConcurrent::run(MainWindow::SMSReceive);
     }
     if(reboot==true)
     {
