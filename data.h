@@ -150,4 +150,6 @@ int wcdma_count=0;
 bool wfirst=true;
 QString wread;
 
+bool reboot=false;
+
 #endif // DATAH_H
