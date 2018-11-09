@@ -53,10 +53,15 @@ public:
     static void send_append(char *TCPWRITE);
     static QString req_csq();
 
+    static void SMSReceive();
+
     QStandardItemModel *model;
 
     QFutureWatcher<QString> watcher;
     QFutureWatcher<void> send_watcher;
+    QFutureWatcher<void> sms_watcher;
+
+
     QString csq;
 
     QAction *pSlotTest1;

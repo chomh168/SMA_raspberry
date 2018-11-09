@@ -230,7 +230,7 @@ void MainWindow::invslot()
         for(int i = 0; i<invCount;i++)
         {
             TSEND[selectSendMsgType-1][1] = (char) i;
-            QFuture<void> t1 = QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
     }
@@ -239,7 +239,7 @@ void MainWindow::invslot()
         for(int i = 0; i<invCount;i++)
         {
             TSEND[selectSendMsgType-1][1] = (char) i;
-            QFuture<void> t2 = QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
     }
@@ -249,7 +249,7 @@ void MainWindow::invslot()
         {
 
             TSEND[selectSendMsgType-1][1] = (char) i;
-            QFuture<void> t3 = QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
 
         }
         selectSendMsgType++;
@@ -259,7 +259,7 @@ void MainWindow::invslot()
         for(int i = 0; i<invCount;i++)
         {
             TSEND[selectSendMsgType-1][1] = (char) i;
-            QFuture<void> t4 = QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
 
             QStandardItem *Item = new QStandardItem(QString::number(inv[i]->totalYeild));
             model->setItem(i,9,Item);
@@ -275,6 +275,7 @@ void MainWindow::invslot()
             QString state="Null";
             if(inv[i]->operatingStatus == 0x127) state = "발전";
             else if(inv[i]->operatingStatus == 0x571) state = "정지";
+            else if(inv[i]->operatingStatus == 0x5BB) state = "준비";
             else if(first==false)
             {
                state = "ERROR("+QString::number(inv[i]->operatingStatus)+")";
@@ -314,7 +315,52 @@ void MainWindow::invslot()
 
 
 
+
 }
+
+void MainWindow::SMSReceive()
+{
+    QThread::sleep(2);
+
+    char CMGR[12] = {0x41, 0x54 , 0x2B , 0x43 , 0x4D , 0x47 , 0x52 , 0x3D , 0x30 , 0x0D};
+    char CNMI0[18] = {0x41, 0x54 , 0x2b , 0x43 , 0x4e , 0x4d , 0x49 , 0x3d , 0x32 , 0x2c , 0x30 , 0x2c , 0x30 , 0x2c , 0x30 , 0x0d}; //off
+    char CNMI1[18] = {0x41, 0x54 , 0x2b , 0x43 , 0x4e , 0x4d , 0x49 , 0x3d , 0x32 , 0x2c , 0x30 , 0x2c , 0x30 , 0x2c , 0x31 , 0x0d}; //on
+    char CNUM[10] = {0x41, 0x54 , 0x24 , 0x24 , 0x43 , 0x4e , 0x55 , 0x4d , 0x0d};
+    char CMGD[12] = {0x41, 0x54, 0x2B, 0x43, 0x4D, 0x47, 0x44, 0x3D, 0x30, 0x0D};
+
+    char rxbuffer[256] = {0,};
+    int fd;
+    int count=0;
+    char buf;
+
+        if((fd=serialOpen("/dev/serial0",115200))<0)
+        {
+            qDebug()<<"err:not Open";
+        }
+        serialFlush(fd);
+    //serialPuts(fd,CNMI0);
+    serialPuts(fd,CMGR);
+    QThread::sleep(2);
+
+        while(serialDataAvail(fd)!=NULL)
+        {
+            system("sudo chmod 777 /dev/ttyAMA0");
+            buf = serialGetchar(fd);
+            rxbuffer[count]=buf;
+            count++;
+        }
+
+        QString feed = QString(rxbuffer);
+        //if(feed.indexOf("CMGR")>0)
+            qDebug()<<feed;
+
+    serialPuts(fd,CMGD);
+
+    serialFlush(fd);
+    serialClose(fd);
+
+}
+
 void MainWindow::cheslot()
 {
     ui->label_3->setText("server  : "+QString::number(serTimer->remainingTime()/1000));//
@@ -430,6 +476,7 @@ void MainWindow::SendWCDMA()
     char PPPCLOSE[15] = {0x41 , 0x54 , 0x24 , 0x24 , 0x50 , 0x50 , 0x50 , 0x43 , 0x4C , 0x4F , 0x53 , 0x45 , 0x0D};
 
 
+
     if(plantNumber<7500){
         eeport = 7777;
         TCPOPEN[23]=0x37;
@@ -469,7 +516,7 @@ void MainWindow::SendWCDMA()
     }
     else
     {
-        bool reboot=false;
+        //bool reboot=false;
 
         for(int i =0; i<=8; i++)
         {
@@ -524,7 +571,11 @@ void MainWindow::SendWCDMA()
                     else
                     {
                         if(wread!=rec)
+                        {
+                            //setFileLog("reboot");
                             reboot=true;
+                        }
+
                     }
                 }
 
@@ -541,7 +592,11 @@ void MainWindow::SendWCDMA()
                 qDebug()<<"CLOSE2";
 
                 if(reboot==true)
-                    system("reboot");
+                {
+                    //setFileLog("reboot");
+                    //system("reboot");
+                }
+
             }
         }
     }
@@ -646,7 +701,7 @@ QString MainWindow::uart_ch(char *ch, int state)
 
     else if (state==6)
     {
-        QThread::sleep(1);
+        QThread::sleep(2);
         while(serialDataAvail(fd)!=NULL)
         {
             system("sudo chmod 777 /dev/ttyAMA0");
@@ -851,7 +906,6 @@ void MainWindow::send_append(char *TCPWRITE)
 
     if(error_flag == true)
     {
-        wcdma_count++;
         wcdma_error=true;
 
         if(wcdma_count==5)
@@ -859,6 +913,8 @@ void MainWindow::send_append(char *TCPWRITE)
             wcdma_count=0;
             wcdma_error=false;
         }
+
+        wcdma_count++;
     }
     else
     {
@@ -1073,6 +1129,15 @@ void MainWindow::send_ok()
         setFileLog("wcmda error");
         QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
         send_watcher.setFuture(th5);
+    }
+    else
+    {
+        //QtConcurrent::run(MainWindow::SMSReceive);
+    }
+    if(reboot==true)
+    {
+        setFileLog("reboot");
+        system("reboot");
     }
 
 }
