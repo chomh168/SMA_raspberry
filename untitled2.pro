@@ -25,7 +25,10 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    tcpclient.cpp
+    tcpclient.cpp \
+    file.cpp \
+    wcdma.cpp \
+    lan.cpp
 
 HEADERS += \
         mainwindow.h \

@@ -21,7 +21,7 @@
 
 
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
 
 class MainWindow : public QMainWindow
@@ -42,7 +42,7 @@ public:
     QTimer *strTimer;
     QTimer *stpTimer;
 
-    //void SendMessage(QString server, char* data, int size);
+
     static bool SendMessage(QString server, int sendNum, int index);
 
     void SendServerHstec();
@@ -72,16 +72,10 @@ private slots:
     void on_pushButton_2_clicked();
     void on_pushButton_3_clicked();
     void on_pushButton_4_clicked();
-
     void on_pushButton_5_clicked();
-
     void on_pushButton_6_clicked();
-
-
     void on_pushButton_7_clicked();
-
     void on_pushButton_8_clicked();
-
     void on_pushButton_9_clicked();
 
 public slots:
@@ -105,6 +99,78 @@ private:
 private:
     int nport;
     int ninverter;
+
+
+public:
+
+
+
+
+
+
+
+            // 인버터 저장할 변수 클래스 생성
+
+
+    int selectSendMsgType = 1;
+
+
+
+
+    QString invIP[20]  = {
+                /*"192.168.0.2",
+                "192.168.0.3",
+                "192.168.0.4",
+                "192.168.0.5",
+                "192.168.0.6",
+                "192.168.0.7",
+                "192.168.0.8",
+                "192.168.0.9",
+                "192.168.0.10",
+                "192.168.0.11",
+                "192.168.0.12",
+                "192.168.0.13",
+                "192.168.0.14",
+                "192.168.0.15",
+                "192.168.0.16",
+                "192.168.0.17",
+                "192.168.0.18",
+                "192.168.0.19",
+                "192.168.0.20",
+                "192.168.0.21"*/
+
+                //"172.30.1.5"
+
+                "192.168.0.101",
+                "192.168.0.102",
+                "192.168.0.103",
+                "192.168.0.104",
+                "192.168.0.105",
+                "192.168.0.106",
+                "192.168.0.107",
+                "192.168.0.108",
+                "192.168.0.109",
+                "192.168.0.110",
+                "192.168.0.111",
+                "192.168.0.112",
+                "192.168.0.113",
+                "192.168.0.114",
+                "192.168.0.115",
+                "192.168.0.116",
+                "192.168.0.117",
+                "192.168.0.118",
+                "192.168.0.119",
+                "192.168.0.120"
+            };
+
+
+
+
+    int jj=0;
+
+
+
+
 
 };
 

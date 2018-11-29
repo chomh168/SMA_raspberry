@@ -6,11 +6,43 @@
 #define INF 1
 
 
+
+Inverter* inv[20]; //= new Inverter[20];
+
+
+//25K STP
+char TSEND[4][12] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x77, 0x43, 0x00, 0x0a,  // Yield Daily, Total (30531)
+                     0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0x31, 0x00, 0x46,  // DC Input A,V,W A (30769)
+                     0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0xed, 0x00, 0x0a,  // DC Input A,V,W B (30957)
+                     0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x9c, 0x5d, 0x00, 0x0a}; // Operating status (40029)
+
+char sdata[70] = {0,};// = new char[70];    // 구서버 송신 버퍼
+char checksum = 0;              // 구서버 송신 체크섬
+
+int plantNumber=7777;
+int invCount=1;
+
+bool first=true;
+bool toggle=true;
+
+bool wcdma_error=false;
+int wcdma_count=0;
+
+bool wfirst=true;
+QString wread;
+
+bool reboot=false;
+int NCSQ=0;
+
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+
+
 
     //번호 가져오기
 
@@ -83,13 +115,10 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 
-
-
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-
 
 //클릭 이벤트(port)
 void MainWindow::on_pushButton_clicked()
@@ -98,6 +127,7 @@ void MainWindow::on_pushButton_clicked()
     setFileNum("port.txt",plantNumber);
 
 }
+
 
 //클릭 이벤트(inverter)
 void MainWindow::on_pushButton_2_clicked()
@@ -123,71 +153,7 @@ void MainWindow::on_pushButton_2_clicked()
     ui->tableView->setModel(model);
 }
 
-//번호 받기
-int MainWindow::getFileNum(QString str)
-{
-    QString filename = str;
-    QFile File(QApplication::applicationDirPath() + "/" + filename);
-
-    if(!File.open(QFile::ReadOnly|QFile::Text)) // 읽기 전용, 텍스트로 파일 열기
-    {
-         if(!File.exists()) // 파일이 존재하지 않으면...
-        {
-             if(str=="port.txt")
-                return 7777;
-             else
-                 return 1;
-        }
-
-    }
-
-    QTextStream OpenFile(&File);
-    QString ConfigText;
-    while(!OpenFile.atEnd())  // 파일 끝까지 읽어서
-    {
-         ConfigText=OpenFile.readLine(); // 한라인씩 읽어서 변수에 적용
-    }
-    File.close(); // 파일닫기
-
-    return ConfigText.toInt();
-}
-
-//번호 입력
-void MainWindow::setFileNum(QString str, int Num)
-{
-    QFile *file = new QFile;
-
-    file->setFileName(QApplication::applicationDirPath() + "/" + str); //파일의 위치와 파일명 설정
-
-    if (!file->open(QIODevice::WriteOnly)) //파일을 오픈
-    {
-        qDebug() << "Error: File Not open";
-    }
-
-    QString strNum(QString::number(Num)); //파일에 작성할 테스트
-    file->write(strNum.toUtf8()); //파일에 텍스트를 작성
-    file->close();
-}
-
-void MainWindow::setFileLog(QString log)
-{
-    QFile *file = new QFile;
-    QString str = "log.txt";
-
-    file->setFileName(QApplication::applicationDirPath() + "/" + str); //파일의 위치와 파일명 설정
-
-    if (!file->open(QIODevice::WriteOnly | QIODevice::Append)) //파일을 오픈
-    {
-        qDebug() << "Error: File Not open";
-    }
-
-    QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
-    file->write(time.toUtf8()+" " + log.toUtf8() + "\r\n"); //파일에 텍스트를 작성
-    file->close();
-}
-
-
-
+//시작 버튼
 void MainWindow::on_pushButton_3_clicked()
 {
    invTimer->start();
@@ -196,6 +162,8 @@ void MainWindow::on_pushButton_3_clicked()
 
    ui->textBrowser->clear();
 }
+
+//정지 버튼
 void MainWindow::on_pushButton_4_clicked()
 {
     invTimer->stop();
@@ -207,26 +175,16 @@ void MainWindow::on_pushButton_4_clicked()
     stpTimer->start();
 }
 
-
-void MainWindow::serslot()
+//인버터 요청
+void MainWindow::on_pushButton_5_clicked()
 {
-    if(toggle==true)
-    {
-        while(sms_watcher.isRunning()==true) QThread::sleep(20);
-
-        QFuture<void> th2 = QtConcurrent::run(MainWindow::SendWCDMA);
-        send_watcher.setFuture(th2);
-    }
-    else
-    {
-        SendServerHstec();
-    }
-
+    invslot();
 }
 
+//인버터 요청
 void MainWindow::invslot()
 {
-
+    //25K STP
     if(selectSendMsgType == 1)
     {
         for(int i = 0; i<invCount;i++)
@@ -314,155 +272,16 @@ void MainWindow::invslot()
 
         if(send_watcher.isRunning()==false)
         {
-            QFuture<void> th6 = QtConcurrent::run(MainWindow::SMSReceive);
-            sms_watcher.setFuture(th6);
+            //QFuture<void> th6 = QtConcurrent::run(MainWindow::SMSReceive);
+            //sms_watcher.setFuture(th6);
         }
-
-    }
-
-
-}
-
-void MainWindow::SMSReceive()
-{
-    char CMGR[12] = {0x41, 0x54 , 0x2B , 0x43 , 0x4D , 0x47 , 0x52 , 0x3D , 0x30 , 0x0D};
-    char CNUM[10] = {0x41, 0x54 , 0x24 , 0x24 , 0x43 , 0x4e , 0x55 , 0x4d , 0x0d};
-    char CMGD[12] = {0x41, 0x54, 0x2B, 0x43, 0x4D, 0x47, 0x44, 0x3D, 0x30, 0x0D};
-    char SMSW[60] = {0x41, 0x54 , 0x24 , 0x24, 0x53 , 0x4D , 0x53 , 0x57 , 0x3D , 0x22 , 0x30 , 0x31 , 0x30 , 0x35 , 0x35 , 0x37 , 0x37 , 0x37 , 0x36 , 0x32 , 0x37 , 0x22 , 0x2C , 0x22 , 0x30 , 0x31 , 0x32 , 0x32 , 0x39 , 0x31 , 0x38 , 0x36 , 0x36 , 0x32 , 0x32 , 0x22 , 0x2C , 0x30 , 0x2C , 0x30 , 0x2C , 0x30 , 0x2C , 0x31 , 0x33 , 0x32 , 0x0D};
-    char MSG[6] = {0x4F, 0x4B, 0x1A, 0x0D};
-
-    char rxbuffer[1024] = {0,};
-    int fd;
-    int count=0;
-    char buf;
-
-    if((fd=serialOpen("/dev/serial0",115200))<0)
-    {
-       qDebug()<<"err:not Open";
-    }
-
-        QThread::sleep(2);
-        serialFlush(fd);
-
-
-        serialPuts(fd,CNUM); // CNUM
-
-        QThread::sleep(2);
-
-        while(serialDataAvail(fd)!=NULL)
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-            buf = serialGetchar(fd);
-            rxbuffer[count]=buf;
-            count++;
-        }
-
-        serialFlush(fd);
-        QString str = QString(rxbuffer);
-
-        //initialization
-        memset((void*)&rxbuffer, 0, sizeof(rxbuffer));
-        count = 0;
-
-        qDebug()<<"after CNUM : "<<str;
-
-        if(str.indexOf("8212")>0)
-        {
-            for(int i = 0;i<8;i++)
-            {
-                SMSW[27+i] = str.at(str.indexOf("8212")+4+i).toLatin1();
-            }
-        }
-
-
-        serialPuts(fd,CMGR); // CMGR
-
-        qDebug()<<SMSW;
-
-        QThread::sleep(2);
-
-        while(serialDataAvail(fd)!=NULL)
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-            buf = serialGetchar(fd);
-            rxbuffer[count]=buf;
-            count++;
-        }
-
-        serialFlush(fd);
-
-        QString feed = QString(rxbuffer);
-            qDebug()<<"read : "<<feed;
-
-        if(feed.indexOf("010")>0)
-        {
-            for(int i =0;i<11;i++)
-            {
-                SMSW[10+i] = feed.at(feed.indexOf("010")+i).toLatin1();
-            }
-
-            if(feed.indexOf("5339383230")>0)  //received MESSAGE
-            {
-                serialPuts(fd,SMSW);
-
-                QThread::sleep(2);
-                while(serialDataAvail(fd)!=NULL)
-                {
-                    system("sudo chmod 777 /dev/ttyAMA0");
-                    buf = serialGetchar(fd);
-                    rxbuffer[count]=buf;
-                    count++;
-                }
-                serialFlush(fd);
-                qDebug()<<rxbuffer;
-
-                serialPuts(fd,MSG);
-            }
-
-            QThread::sleep(1);
-
-            serialPuts(fd,CMGD);
-        }
-
-    QThread::sleep(1);
-
-    serialFlush(fd);
-    serialClose(fd);
-
-}
-
-void MainWindow::cheslot()
-{
-    ui->label_3->setText("server  : "+QString::number(serTimer->remainingTime()/1000));//
-    ui->label_4->setText("inverter : "+QString::number(invTimer->remainingTime()/1000));//
-
-    if(digitalRead(1)==1)
-    {
-        char buffer[255];
-        sprintf(buffer,"python /home/pi/Desktop/shapes.py %d %d %d %d %d",plantNumber,jj+1,NCSQ,inv[jj]->acCurrent,inv[jj]->dailyYeild);
-        system(buffer);
-        jj++;
-        jj = ((jj)%invCount);
-
-        QFuture<QString> th1 = QtConcurrent::run(MainWindow::req_csq);
-        watcher.setFuture(th1);
     }
 }
-void MainWindow::strslot()
-{
-    invTimer->start();
-    serTimer->start();
-    cheTimer->start();
 
-
-    strTimer->stop();
-    ui->textBrowser->clear();
-}
-
-
+//메세지를 담는 부분
 bool MainWindow::SendMessage(QString ipaddress, int selectSendMsgType, int count)
 {
-
+    //25K STP
     TcpClient *client = new TcpClient();
     bool check = client->TcpConnect(ipaddress,502);
 
@@ -519,583 +338,94 @@ bool MainWindow::SendMessage(QString ipaddress, int selectSendMsgType, int count
 }
 
 
-
-void addPacket(int cnt, int value)
+//서버 전송
+void MainWindow::on_pushButton_6_clicked()
 {
-    sdata[cnt] = (char)(value&0xff);
-    checksum ^= sdata[cnt];
+    serslot();
 }
 
-//WCDMA를 통한 전송
-void MainWindow::SendWCDMA()
+//서버 전송
+void MainWindow::serslot()
 {
-    //while(sms_watcher.isRunning()==true) QThread::sleep(20);
-
-    int eeport = 0;
-
-    char ATE[7] = {0x41, 0x54, 0x45, 0x30, 0x0D, 0x0A};
-    char CSQ[8] = {0x41, 0x54, 0x2B, 0x43, 0x53, 0x51, 0x0D};
-    char TCPTYPE[16] = {0x41, 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x54 , 0x59 , 0x50 , 0x45 , 0x3D , 0x32 , 0x0D , 0x0A};
-    char PPPOPEN[13] = {0x41 , 0x54 , 0x24 , 0x24 , 0x50 , 0x50 , 0x50 , 0x4F , 0x50 , 0x45 , 0x4E , 0x0D, 0x0A};
-    //char TCPOPEN[50] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x4F , 0x50 , 0x45 , 0x4E , 0x3D  , 0x32 , 0x32 , 0x30 , 0x2E , 0x31 , 0x32 , 0x32 , 0x2E , 0x32 , 0x30 , 0x33 , 0x2E , 0x31 , 0x31 , 0x31 , 0x2C , 0x37 , 0x37 , 0x37 , 0x38 , 0x0D , 0x0A};
-    char TCPOPEN[50] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x4F , 0x50 , 0x45 , 0x4E , 0x3D  , 0x31 , 0x32 , 0x31 , 0x2E , 0x31 , 0x35 , 0x39 , 0x2E , 0x33 , 0x30 , 0x2E , 0x31, 0x35 , 0x2C , 0x37 , 0x37}; //, 0x37 , 0x37 , 0x37 , 0x38 , 0x0D , 0x0A};
-
-    char TCPWRITE[256] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x57 , 0x52 , 0x49 , 0x54 , 0x45 , 0x3D};//, 0xFF, 0xFF};
-
-    char TCPREAD[15] = {0x41, 0x54, 0x24, 0x24, 0x54, 0x43, 0x50, 0x52, 0x45, 0x41, 0x44, 0x0d, 0x0a};
-
-    char TCPCLOSE[15] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x43 , 0x4C , 0x4F , 0x53 , 0x45 , 0x0D};
-    char PPPCLOSE[15] = {0x41 , 0x54 , 0x24 , 0x24 , 0x50 , 0x50 , 0x50 , 0x43 , 0x4C , 0x4F , 0x53 , 0x45 , 0x0D};
-
-
-
-    if(plantNumber<7500){
-        eeport = 7777;
-        TCPOPEN[23]=0x37;
-        TCPOPEN[24]=0x37;
-        TCPOPEN[25]=0x0D;
-        TCPOPEN[25]=0x0A;
-
-    } else if(plantNumber<8000){
-        eeport = 7778;
-        TCPOPEN[28]=0x37;
-        TCPOPEN[29]=0x38;
-        TCPOPEN[30]=0x0D;
-        TCPOPEN[31]=0x0A;
-
-    } else if(plantNumber<8500){
-        eeport = 7779;
-        TCPOPEN[28]=0x37;
-        TCPOPEN[29]=0x39;
-        TCPOPEN[30]=0x0D;
-        TCPOPEN[31]=0x0A;
-
-    } else if(plantNumber<9000){
-        eeport = 7780;
-        TCPOPEN[28]=0x38;
-        TCPOPEN[29]=0x30;
-        TCPOPEN[30]=0x0D;
-        TCPOPEN[31]=0x0A;
-
-    }
-
-    qDebug()<<"tcpopen : "<<TCPOPEN;
-
-
-    if(wiringPiSetup() == -1)
+    if(toggle==true)
     {
-        qDebug()<<"err:not setup";
+        while(sms_watcher.isRunning()==true) QThread::sleep(20);
+
+        QFuture<void> th2 = QtConcurrent::run(MainWindow::SendWCDMA);
+        send_watcher.setFuture(th2);
     }
     else
     {
-        for(int i =0; i<=8; i++)
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-
-            if(i==0)
-            {
-                uart_ch(ATE,i);
-                qDebug()<<"ATE";
-            }
-            else if(i==1)
-            {
-                uart_ch(CSQ,i);
-                qDebug()<<"CSQ";
-            }
-            else if(i==2)
-            {
-                uart_ch(TCPTYPE,i);
-                qDebug()<<"TYPE";
-            }
-            else if(i==3)
-            {
-                uart_ch(PPPOPEN,i);
-                qDebug()<<"OPEN";
-            }
-            else if(i==4)
-            {
-                uart_ch(TCPOPEN,i);
-                qDebug()<<"OPEN2";
-
-
-            }
-            else if(i==5)
-            {
-                send_append(TCPWRITE);
-                qDebug()<<"tcpwrite : "<<TCPWRITE;
-            }
-
-            //read??
-            else if(i==6)
-            {
-                QString rec = uart_ch(TCPREAD,i);
-                qDebug()<<"READ";
-
-                if(rec.indexOf("OK")!=-1)
-                {
-                    if(wfirst==true)
-                    {
-                        wfirst=false;
-                        wread = rec;
-                    }
-                    else
-                    {
-                        if(wread!=rec)
-                        {
-                            reboot=true;
-                        }
-
-                    }
-                }
-
-            }
-
-            else if(i==7)
-            {
-                uart_ch(TCPCLOSE,i);
-                qDebug()<<"CLOSE";
-            }
-            else if(i==8)
-            {
-                uart_ch(PPPCLOSE,i);
-                qDebug()<<"CLOSE2";
-
-            }
-        }
-    }
-}
-
-QString MainWindow::uart_ch(char *ch, int state)
-{
-    char rxbuffer[1024] = {0,};
-    int fd;
-    int count=0;
-
-    char buf;
-
-    if((fd=serialOpen("/dev/serial0",115200))<0)
-    {
-        qDebug()<<"err:not Open";
-    }
-
-    system("sudo chmod 777 /dev/ttyAMA0");
-    serialPuts(fd,ch);
-
-
-    if(state == 1)
-    {
-        QThread::sleep(1);
-        while(serialDataAvail(fd)!=NULL)
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-            buf = serialGetchar(fd);
-            rxbuffer[count]=buf;
-            count++;
-        }
-
-        serialFlush(fd);
-        serialClose(fd);
-
-        qDebug()<<"Msg :"<<rxbuffer;
-
-        QString lcsq = QString(rxbuffer);
-
-        if(lcsq.length()==7)
-            NCSQ=0;
-        else
-            NCSQ = lcsq[8].digitValue()*10 + lcsq[9].digitValue();
-
-
-        return lcsq;
-    }
-
-    else if(state == 3 || state == 4)
-    {
-        QThread::sleep(5);
-            while(serialDataAvail(fd)!=NULL)
-            {
-                system("sudo chmod 777 /dev/ttyAMA0");
-                buf = serialGetchar(fd);
-                rxbuffer[count]=buf;
-                count++;
-            }
-
-            QString feed = QString(rxbuffer);
-
-            qDebug()<<"open : "<<rxbuffer;
-
-            if(feed.indexOf("ERROR")!=-1) //에러 미발생
-            {
-                wcdma_error=true;
-            }
-
-        serialFlush(fd);
-        serialClose(fd);
-
-        return 0;
-    }
-
-
-
-    else if(state == 5)
-    {
-        QThread::sleep(1);
-
-        while(serialDataAvail(fd)!=NULL)
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-            buf = serialGetchar(fd);
-            rxbuffer[count]=buf;
-            count++;
-        }
-
-        QString feed = QString(rxbuffer);
-
-        qDebug()<<"debug : "<<rxbuffer;
-
-
-        serialFlush(fd);
-        serialClose(fd);
-
-        return feed;
-    }
-
-    else if (state==6)
-    {
-        QThread::sleep(2);
-        while(serialDataAvail(fd)!=NULL)
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-            buf = serialGetchar(fd);
-            rxbuffer[count]=buf;
-            count++;
-        }
-
-        QString feed = QString(rxbuffer);
-
-        qDebug()<<"length : "<<feed.length();
-        qDebug()<<"content : "<<feed;
-
-        serialFlush(fd);
-        serialClose(fd);
-
-        return feed;
-    }
-
-    else
-    {
-        QThread::sleep(1);
-
-        serialFlush(fd);
-        serialClose(fd);
-
-        return 0;
+        SendServerHstec();
     }
 
 }
 
-void MainWindow::send_append(char *TCPWRITE)
+//로그 보기
+void MainWindow::on_pushButton_7_clicked()
 {
-    char buffer[140]={0,};
-    char ccs;
+    QString str = "leafpad "+QApplication::applicationDirPath()+"/log.txt";
+    qDebug()<<str;
 
-    bool error_flag = false;
+    system(str.toUtf8());
+}
 
-    for(int i = 0;i<invCount;i++)
+//CSQ 요청
+void MainWindow::on_pushButton_8_clicked()
+{
+    QFuture<QString> th1 = QtConcurrent::run(MainWindow::req_csq);
+    watcher.setFuture(th1);
+
+}
+
+//통신 방법 교환
+void MainWindow::on_pushButton_9_clicked()
+{
+    if(toggle==true)
     {
-        ccs = 0;
-        ccs ^= 'T';
-        ccs ^= (char)(plantNumber/0x100);
-        ccs ^= (char)(plantNumber%0x100);
-        ccs ^= (inv[i]->invID+0x31);
-
-        //inv_number--;
-        ccs ^= (char)0;
-        ccs ^= (char)25;
-        ccs ^= (char)0;
-        ccs ^= (char)0;
-        ccs ^= (char)0;
-        ccs ^= (char)(inv[i]->operatingStatus/0x100);
-        ccs ^= (char)(inv[i]->operatingStatus%0x100);
-        ccs ^= (char)(0);
-        ccs ^= (char)(0);
-        ccs ^= (char)(0);
-        ccs ^= (char)(0);
-        ccs ^= (char)(0);
-        ccs ^= (char)(0);
-
-        ccs ^= (char)((inv[i]->dcVoltage / 100)/0x100);
-        ccs ^= (char)((inv[i]->dcVoltage / 100)%0x100);
-        ccs ^= (char)((inv[i]->dcCurrent / 1000)/0x100);
-        ccs ^= (char)((inv[i]->dcCurrent / 1000)%0x100);
-
-        ccs ^= (char)((inv[i]->acVoltage1 / 100)/0x100);
-        ccs ^= (char)((inv[i]->acVoltage1 / 100)%0x100);
-        ccs ^= (char)((inv[i]->acVoltage2 / 100)/0x100);
-        ccs ^= (char)((inv[i]->acVoltage2 / 100)%0x100);
-        ccs ^= (char)((inv[i]->acVoltage3 / 100) /0x100);
-        ccs ^= (char)((inv[i]->acVoltage3 / 100) %0x100);
-        ccs ^= (char)((inv[i]->acCurrent / 1000)/0x100);
-        ccs ^= (char)((inv[i]->acCurrent / 1000)%0x100);
-        ccs ^= (char)((inv[i]->acCurrent / 1000)/0x100);
-        ccs ^= (char)((inv[i]->acCurrent / 1000)%0x100);
-
-        ccs ^= (char)((inv[i]->acCurrent / 1000)/0x100);
-        ccs ^= (char)((inv[i]->acCurrent / 1000)%0x100);
-        ccs ^= (char)((inv[i]->acFrequency/10)/0x100);
-        ccs ^= (char)((inv[i]->acFrequency/10)%0x100);
-
-        ccs ^= (char)((inv[i]->acVoltage1 / 100)/0x100);
-        ccs ^= (char)((inv[i]->acVoltage1 / 100)%0x100);
-        ccs ^= (char)((inv[i]->acVoltage2 / 100)/0x100);
-        ccs ^= (char)((inv[i]->acVoltage2 / 100)%0x100);
-        ccs ^= (char)((inv[i]->acVoltage3 / 100) /0x100);
-        ccs ^= (char)((inv[i]->acVoltage3 / 100) %0x100);
-        ccs ^= (char)((inv[i]->acCurrent / 1000)/0x100);
-        ccs ^= (char)((inv[i]->acCurrent / 1000)%0x100);
-        ccs ^= (char)((inv[i]->acCurrent / 1000)/0x100);
-        ccs ^= (char)((inv[i]->acCurrent / 1000)%0x100);
-
-        ccs ^= (char)((inv[i]->acCurrent / 1000)/0x100);
-        ccs ^= (char)((inv[i]->acCurrent / 1000)%0x100);
-        ccs ^= (char)((inv[i]->acFrequency/10)/0x100);
-        ccs ^= (char)((inv[i]->acFrequency/10)%0x100);
-
-        ccs ^= (char)((inv[i]->dcPower / 100)/0x100);
-        ccs ^= (char)((inv[i]->dcPower / 100)%0x100);
-        ccs ^= (char)((inv[i]->totalYeild>>24)&0xff);
-        ccs ^= (char)((inv[i]->totalYeild>>16)&0xff);
-        ccs ^= (char)((inv[i]->totalYeild>>8)&0xff);
-        ccs ^= (char)(inv[i]->totalYeild&0xff);
-        ccs ^= (char)((inv[i]->acPower / 100)/0x100);
-        ccs ^= (char)((inv[i]->acPower / 100)%0x100);
-        ccs ^= (char)((inv[i]->acPower / 100)/0x100);
-        ccs ^= (char)((inv[i]->acPower / 100)%0x100);
-
-        ccs ^= (char)(inv[i]->dailyYeild/0x100);
-        ccs ^= (char)(inv[i]->dailyYeild%0x100);
-        ccs ^= (char)(0);
-        ccs ^= (char)(0);
-
-    sprintf(buffer,"%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
-            0xFF,
-            0xFF,
-            0x55,
-            'T',
-            (unsigned char)(plantNumber/0x100),
-            (unsigned char)(plantNumber%0x100),
-            (inv[i]->invID+0x31),
-            (unsigned char)0,
-            (unsigned char)25,
-            (unsigned char)0,
-            (unsigned char)0,
-            (unsigned char)0,
-            (unsigned char)(inv[i]->operatingStatus/0x100),
-            (unsigned char)(inv[i]->operatingStatus%0x100),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            (unsigned char)((inv[i]->dcVoltage / 100)/0x100),
-            (unsigned char)((inv[i]->dcVoltage / 100)%0x100),
-            (unsigned char)((inv[i]->dcCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->dcCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acVoltage1 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage1 / 100)%0x100),
-            (unsigned char)((inv[i]->acVoltage2 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage2 / 100)%0x100),
-            (unsigned char)((inv[i]->acVoltage3 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage3 / 100)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acFrequency/10)/0x100),
-            (unsigned char)((inv[i]->acFrequency/10)%0x100),
-            (unsigned char)((inv[i]->acVoltage1 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage1 / 100)%0x100),
-            (unsigned char)((inv[i]->acVoltage2 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage2 / 100)%0x100),
-            (unsigned char)((inv[i]->acVoltage3 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage3 / 100)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acFrequency/10)/0x100),
-            (unsigned char)((inv[i]->acFrequency/10)%0x100),
-            (unsigned char)((inv[i]->dcPower / 100)/0x100),
-            (unsigned char)((inv[i]->dcPower / 100)%0x100),
-            (unsigned char)((inv[i]->totalYeild>>24)&0xff),
-            (unsigned char)((inv[i]->totalYeild>>16)&0xff),
-            (unsigned char)((inv[i]->totalYeild>>8)&0xff),
-            (unsigned char)(inv[i]->totalYeild&0xff),
-            (unsigned char)((inv[i]->acPower / 100)/0x100),
-            (unsigned char)((inv[i]->acPower / 100)%0x100),
-            (unsigned char)((inv[i]->acPower / 100)/0x100),
-            (unsigned char)((inv[i]->acPower / 100)%0x100),
-            (unsigned char)(inv[i]->dailyYeild/0x100),
-            (unsigned char)(inv[i]->dailyYeild%0x100),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            ccs,
-            0xaa
-            );
-
-        for(int i = 13 ; i<136+13;i++)
-        {
-            TCPWRITE[i] = buffer[i-13];
-        }
-
-        TCPWRITE[149] = 0x0d;
-        TCPWRITE[150] = 0x0a;
-
-        QString feed = uart_ch(TCPWRITE,5);
-
-        if(feed.indexOf("OK") == -1)
-        {
-            error_flag |= true;
-            break;
-        }
-
-    }
-
-    if(error_flag == true)
-    {
-        wcdma_error=true;
-
-        if(wcdma_count==5)
-        {
-            wcdma_count=0;
-            wcdma_error=false;
-        }
-
-        wcdma_count++;
+        toggle=false;
+        ui->pushButton_9->setText("LAN");
     }
     else
     {
-        wcdma_error=false;
+        toggle=true;
+        ui->pushButton_9->setText("WCD");
     }
-
 }
 
-
-// INTERNET을 통한 전송
-void MainWindow::SendServerHstec()
+//1초 마다 확인
+void MainWindow::cheslot()
 {
-    int eeport = 0;
+    ui->label_3->setText("server  : "+QString::number(serTimer->remainingTime()/1000));//
+    ui->label_4->setText("inverter : "+QString::number(invTimer->remainingTime()/1000));//
 
-    if(plantNumber<7500){
-        eeport = 7777;
-
-    } else if(plantNumber<8000){
-        eeport = 7778;
-
-    } else if(plantNumber<8500){
-        eeport = 7779;
-
-    } else if(plantNumber<9000){
-        eeport = 7780;
-
-    }
-
-
-
-    for (int i = 0; i < invCount; i++)
+    if(digitalRead(1)==1)
     {
-        addPacket(0, 0x55);
-        checksum = 0;
-        addPacket(1, 0x54);
-        addPacket(2, (plantNumber / 0x100));
-        addPacket(3, (plantNumber % 0x100));
-        addPacket(4, (inv[i]->invID + 0x31));
-        addPacket(5, 0);        // adc0
-        addPacket(6, 25);       // adc1
-        addPacket(7, 0);        // adc0
-        addPacket(8, 0);        // adc0
-        addPacket(9, 0);        // blackout im_key
-        addPacket(10, inv[i]->operatingStatus / 0x100);    // inverter_status
-        addPacket(11, inv[i]->operatingStatus % 0x100);    // inverter_status
-        addPacket(12, 0);    // inverter_status
-        addPacket(13, 0);    // inverter_status
-        addPacket(14, 0);    // inverter_status
-        addPacket(15, 0);    // inverter_status
-        addPacket(16, 0);    // inverter_status
-        addPacket(17, 0);    // inverter_status
-        addPacket(18, (inv[i]->dcVoltage / 100) / 0x100);
-        addPacket(19, (inv[i]->dcVoltage / 100) % 0x100);
-        addPacket(20, (inv[i]->dcCurrent / 1000) / 0x100);
-        addPacket(21, (inv[i]->dcCurrent / 1000) % 0x100);
+        char cmd[255];
+        sprintf(cmd,"python /home/pi/Desktop/shapes.py %d %d %d %d %d",plantNumber,jj+1,NCSQ,inv[jj]->acCurrent,inv[jj]->dailyYeild);
+        system(cmd);
+        jj++;
+        jj = ((jj)%invCount);
 
-        addPacket(22, (inv[i]->acVoltage1 / 100) / 0x100);
-        addPacket(23, (inv[i]->acVoltage1 / 100) % 0x100);
-        addPacket(24, (inv[i]->acVoltage2 / 100) / 0x100);
-        addPacket(25, (inv[i]->acVoltage2 / 100) % 0x100);
-        addPacket(26, (inv[i]->acVoltage3 / 100) / 0x100);
-        addPacket(27, (inv[i]->acVoltage3 / 100) % 0x100);
-
-        addPacket(28, (inv[i]->acCurrent / 1000) / 0x100);
-        addPacket(29, (inv[i]->acCurrent / 1000) % 0x100);
-        addPacket(30, (inv[i]->acCurrent / 1000) / 0x100);
-        addPacket(31, (inv[i]->acCurrent / 1000) % 0x100);
-        addPacket(32, (inv[i]->acCurrent / 1000) / 0x100);
-        addPacket(33, (inv[i]->acCurrent / 1000) % 0x100);
-
-        addPacket(34, (inv[i]->acFrequency / 10) / 0x100);
-        addPacket(35, (inv[i]->acFrequency / 10) % 0x100);
-
-        addPacket(36, (inv[i]->acVoltage1 / 100) / 0x100);
-        addPacket(37, (inv[i]->acVoltage1 / 100) % 0x100);
-        addPacket(38, (inv[i]->acVoltage2 / 100) / 0x100);
-        addPacket(39, (inv[i]->acVoltage2 / 100) % 0x100);
-        addPacket(40, (inv[i]->acVoltage3 / 100) / 0x100);
-        addPacket(41, (inv[i]->acVoltage3 / 100) % 0x100);
-
-        addPacket(42, (inv[i]->acCurrent / 1000) / 0x100);
-        addPacket(43, (inv[i]->acCurrent / 1000) % 0x100);
-        addPacket(44, (inv[i]->acCurrent / 1000) / 0x100);
-        addPacket(45, (inv[i]->acCurrent / 1000) % 0x100);
-        addPacket(46, (inv[i]->acCurrent / 1000) / 0x100);
-        addPacket(47, (inv[i]->acCurrent / 1000) % 0x100);
-
-        addPacket(48, (inv[i]->acFrequency / 10) / 0x100);
-        addPacket(49, (inv[i]->acFrequency / 10) % 0x100);
-
-        addPacket(50, ((inv[i]->dcPower) / 100) / 0x100);
-        addPacket(51, ((inv[i]->dcPower) / 100) % 0x100);
-
-        addPacket(52, (inv[i]->totalYeild >> 24) & 0xff);
-        addPacket(53, (inv[i]->totalYeild >> 16) & 0xff);
-        addPacket(54, (inv[i]->totalYeild >> 8) & 0xff);
-        addPacket(55, inv[i]->totalYeild & 0xff);
-
-        addPacket(56, (inv[i]->acPower / 100) / 0x100);
-        addPacket(57, (inv[i]->acPower / 100) % 0x100);
-        addPacket(58, (inv[i]->acPower / 100) / 0x100);
-        addPacket(59, (inv[i]->acPower / 100) % 0x100);
-
-        addPacket(60, inv[i]->dailyYeild / 0x100);
-        addPacket(61, inv[i]->dailyYeild % 0x100);
-
-        addPacket(62, 0);   // pf
-        addPacket(63, 0);   // pf
-
-        sdata[64] = checksum;
-        sdata[65] = 0xaa;
-
-
-        qDebug()<<"s : "<<hex<<sdata;
-        SendMessageHstec("hstec.kr", eeport, sdata,sizeof(sdata));
-        //SendMessageHstec("220.122.203.111",7778,sdata,sizeof(sdata));
-     }
+        QFuture<QString> th1 = QtConcurrent::run(MainWindow::req_csq);
+        watcher.setFuture(th1);
+    }
 }
 
+//초기 시작
+void MainWindow::strslot()
+{
+    invTimer->start();
+    serTimer->start();
+    cheTimer->start();
+
+
+    strTimer->stop();
+    ui->textBrowser->clear();
+}
+
+
+//LAN을 통한 전송 부분
 void MainWindow::SendMessageHstec(QString server, int port, char* data,int size)
 {
     TcpClient *client = new TcpClient();
@@ -1117,28 +447,7 @@ void MainWindow::SendMessageHstec(QString server, int port, char* data,int size)
     client->TcpDisconnect();
 }
 
-
-
-void MainWindow::on_pushButton_5_clicked()
-{
-    invslot();
-}
-
-void MainWindow::on_pushButton_6_clicked()
-{
-    serslot();
-}
-
-void MainWindow::on_pushButton_7_clicked()
-{
-
-
-    QString str = "leafpad "+QApplication::applicationDirPath()+"/log.txt";
-    qDebug()<<str;
-
-    system(str.toUtf8());
-}
-
+//csq 확인
 QString MainWindow::req_csq()
 {
     system("sudo chmod 777 /dev/ttyAMA0");
@@ -1167,6 +476,7 @@ QString MainWindow::req_csq()
     return str;
 }
 
+//csq 확인
 void MainWindow::csq_ok()
 {
     csq = watcher.result();
@@ -1179,6 +489,7 @@ void MainWindow::csq_ok()
     QMessageBox::information(this,"info","CSQ : "+QString::number(NCSQ),"OK");
 }
 
+//wcdma 전송 확인
 void MainWindow::send_ok()
 {
     ui->textBrowser->clear();
@@ -1209,23 +520,3 @@ void MainWindow::send_ok()
 
 }
 
-void MainWindow::on_pushButton_8_clicked()
-{
-    QFuture<QString> th1 = QtConcurrent::run(MainWindow::req_csq);
-    watcher.setFuture(th1);
-
-}
-
-void MainWindow::on_pushButton_9_clicked()
-{
-    if(toggle==true)
-    {
-        toggle=false;
-        ui->pushButton_9->setText("LAN");
-    }
-    else
-    {
-        toggle=true;
-        ui->pushButton_9->setText("WCD");
-    }
-}

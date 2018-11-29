@@ -101,6 +101,8 @@ unsigned char TcpClient::getBuf(int index)
     return (unsigned)this->buffer[index];
 }
 
+
+//통신 로그 기록
 void TcpClient::setFileLog(QString log)
 {
     QFile *file = new QFile;
@@ -118,3 +120,4 @@ void TcpClient::setFileLog(QString log)
     file->close();
 
 }
+

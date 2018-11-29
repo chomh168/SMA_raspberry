@@ -286,6 +286,9 @@
    <property name="text">
     <string>종료</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
