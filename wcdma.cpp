@@ -140,7 +140,7 @@ void MainWindow::SendWCDMA()
 {
     //while(sms_watcher.isRunning()==true) QThread::sleep(20);
 
-    int eeport = 0;
+
 
     char ATE[7] = {0x41, 0x54, 0x45, 0x30, 0x0D, 0x0A};
     char CSQ[8] = {0x41, 0x54, 0x2B, 0x43, 0x53, 0x51, 0x0D};
@@ -159,28 +159,28 @@ void MainWindow::SendWCDMA()
 
 
     if(plantNumber<7500){
-        eeport = 7777;
+        //7777;
         TCPOPEN[23]=0x37;
         TCPOPEN[24]=0x37;
         TCPOPEN[25]=0x0D;
         TCPOPEN[25]=0x0A;
 
     } else if(plantNumber<8000){
-        eeport = 7778;
+        //7778;
         TCPOPEN[28]=0x37;
         TCPOPEN[29]=0x38;
         TCPOPEN[30]=0x0D;
         TCPOPEN[31]=0x0A;
 
     } else if(plantNumber<8500){
-        eeport = 7779;
+        //7779;
         TCPOPEN[28]=0x37;
         TCPOPEN[29]=0x39;
         TCPOPEN[30]=0x0D;
         TCPOPEN[31]=0x0A;
 
     } else if(plantNumber<9000){
-        eeport = 7780;
+        //7780;
         TCPOPEN[28]=0x38;
         TCPOPEN[29]=0x30;
         TCPOPEN[30]=0x0D;

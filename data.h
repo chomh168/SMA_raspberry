@@ -91,12 +91,24 @@ struct Inverter
         int invID;   // 인버터 번호, 0번부터 시작
         int dailyYeild;
         int totalYeild;
+
         int dcCurrentA;
         int dcCurrentB;
+        int dcCurrentC;
+        int dcCurrentD;
+        int dcCurrentE;
+        int dcCurrentF;
+
         int dcVoltageA;
         int dcVoltageB;
+
         int dcPowerA;
         int dcPowerB;
+        int dcPowerC;
+        int dcPowerD;
+        int dcPowerE;
+        int dcPowerF;
+
         int dcCurrent;
         int dcVoltage;
         int dcPower;
@@ -115,11 +127,18 @@ struct Inverter
            totalYeild = 0;
            dcCurrentA = 0;
            dcCurrentB = 0;
+           dcCurrentC = 0;
+           dcCurrentD = 0;
+           dcCurrentE = 0;
+           dcCurrentF = 0;
            dcVoltageA = 0;
            dcVoltageB = 0;
            dcPowerA = 0;
            dcPowerB = 0;
-           dcPowerA = 0;
+           dcPowerC = 0;
+           dcPowerD = 0;
+           dcPowerE = 0;
+           dcPowerF = 0;
            dcCurrent = 0;
            dcVoltage = 0;
            dcPower = 0;

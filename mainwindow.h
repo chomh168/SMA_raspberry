@@ -78,6 +78,8 @@ private slots:
     void on_pushButton_8_clicked();
     void on_pushButton_9_clicked();
 
+    void on_comboBox_activated(const QString &arg1);
+
 public slots:
     void serslot();
     void invslot();
@@ -103,19 +105,7 @@ private:
 
 public:
 
-
-
-
-
-
-
-            // 인버터 저장할 변수 클래스 생성
-
-
     int selectSendMsgType = 1;
-
-
-
 
     QString invIP[20]  = {
                 /*"192.168.0.2",
@@ -163,14 +153,7 @@ public:
                 "192.168.0.120"
             };
 
-
-
-
     int jj=0;
-
-
-
-
 
 };
 

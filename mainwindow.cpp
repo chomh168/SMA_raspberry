@@ -9,12 +9,25 @@
 
 Inverter* inv[20]; //= new Inverter[20];
 
-
 //25K STP
-char TSEND[4][12] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x77, 0x43, 0x00, 0x0a,  // Yield Daily, Total (30531)
-                     0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0x31, 0x00, 0x46,  // DC Input A,V,W A (30769)
-                     0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0xed, 0x00, 0x0a,  // DC Input A,V,W B (30957)
-                     0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x9c, 0x5d, 0x00, 0x0a}; // Operating status (40029)
+char TSEND[4][12] = {  0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x77, 0x43, 0x00, 0x0a,  // Yield Daily, Total (30531)
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0x31, 0x00, 0x46,  // DC Input A,V,W A (30769)
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0xed, 0x00, 0x0a,  // DC Input A,V,W B (30957)
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x9c, 0x5d, 0x00, 0x0a}; // Operating status (40029)
+
+//50K STP
+char T5SEND[5][12] = {  0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x77, 0x43, 0x00, 0x0a, // Yield Daily, Total (30531)
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0x31, 0x00, 0x46, // DC Input A,V,W A (30769)
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0xed, 0x00, 0x12, // DC Input A,V,W B (30957)
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x9c, 0x5d, 0x00, 0x0a, // Operating status (40029)
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x79, 0xe9, 0x00, 0x0C};// DC Input A,V,W B (31209)
+
+//1M SC
+char C1SEND[3][12] = {  0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x77, 0x43, 0x00, 0x0a, // Yield Daily, Total (30531)
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0x31, 0x00, 0x46, // DC Input A,V,W A (30769)
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x76, 0x21, 0x00, 0x0a};// Operating status (30241)
+
+
 
 char sdata[70] = {0,};// = new char[70];    // 구서버 송신 버퍼
 char checksum = 0;              // 구서버 송신 체크섬
@@ -34,6 +47,7 @@ QString wread;
 bool reboot=false;
 int NCSQ=0;
 
+int capacity = 0;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -41,12 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-
-
-
     //번호 가져오기
-
-
     ui->spinBox->setValue(getFileNum("port.txt"));
     ui->spinBox_2->setValue(getFileNum("inverter.txt"));
 
@@ -110,7 +119,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QFuture<QString> th1 = QtConcurrent::run(MainWindow::req_csq);
     watcher.setFuture(th1);
 
-
+    ui->comboBox->addItem("25K");
+    ui->comboBox->addItem("50K");
+    ui->comboBox->addItem("1M");
 
 }
 
@@ -184,6 +195,9 @@ void MainWindow::on_pushButton_5_clicked()
 //인버터 요청
 void MainWindow::invslot()
 {
+    //25K
+    if(capacity==0)
+    {
     //25K STP
     if(selectSendMsgType == 1)
     {
@@ -276,61 +290,367 @@ void MainWindow::invslot()
             //sms_watcher.setFuture(th6);
         }
     }
+    }
+
+    //50K
+    else if(capacity==1)
+    {
+        //50K STP
+        if(selectSendMsgType == 1)
+        {
+            for(int i = 0; i<invCount;i++)
+            {
+                T5SEND[selectSendMsgType-1][1] = (char) i;
+                QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            }
+            selectSendMsgType++;
+        }
+        else if(selectSendMsgType == 2)
+        {
+            for(int i = 0; i<invCount;i++)
+            {
+                T5SEND[selectSendMsgType-1][1] = (char) i;
+                QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            }
+            selectSendMsgType++;
+        }
+        else if(selectSendMsgType == 3)
+        {
+            for(int i = 0; i<invCount;i++)
+            {
+
+                T5SEND[selectSendMsgType-1][1] = (char) i;
+                QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+
+            }
+            selectSendMsgType++;
+        }
+        else if(selectSendMsgType ==4)
+        {
+            for(int i = 0; i<invCount;i++)
+            {
+                T5SEND[selectSendMsgType-1][1] = (char) i;
+                QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+
+                QStandardItem *Item = new QStandardItem(QString::number(inv[i]->totalYeild));
+                model->setItem(i,9,Item);
+                Item = new QStandardItem("-");
+                model->setItem(i,8,Item);
+                Item = new QStandardItem(QString::number(inv[i]->acCurrent / 1000));
+                model->setItem(i,5,Item);
+                Item = new QStandardItem(QString::number(inv[i]->acPower / 1000));
+                model->setItem(i,6,Item);
+                Item = new QStandardItem(QString::number(inv[i]->acVoltage1 / 100));
+                model->setItem(i,4,Item);
+
+                QString state="Null";
+                if(inv[i]->operatingStatus == 0x127) state = "발전";
+                else if(inv[i]->operatingStatus == 0xFFFD) state = "정지";
+                else if(inv[i]->operatingStatus == 0x5BB) state = "준비";
+                else if(first==false)
+                {
+                   state = "ERROR("+QString::number(inv[i]->operatingStatus)+")";
+                   setFileLog(invIP[i]+" "+state);
+                }
+                Item = new QStandardItem(state);
+                model->setItem(i,0,Item);
+
+                Item = new QStandardItem(QString::number(inv[i]->dcCurrent / 1000));
+                model->setItem(i,2,Item);
+                Item = new QStandardItem(QString::number(inv[i]->dcVoltage / 100));
+                model->setItem(i,1,Item);
+                Item = new QStandardItem(QString::number(inv[i]->dcPower / 1000));
+                model->setItem(i,3,Item);
+                Item = new QStandardItem(QString::number(0));
+                model->setItem(i,7,Item);
+                QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+                Item = new QStandardItem(time);
+                model->setItem(i,10,Item);
+
+                ui->tableView->setModel(model);
+                ui->tableView->resizeColumnsToContents();
+                ui->tableView->resizeRowsToContents();
+            }
+            selectSendMsgType++;
+
+            if(first==true)
+            {
+                QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+                send_watcher.setFuture(th5);
+            }
+
+            first=false;
+
+            if(send_watcher.isRunning()==false)
+            {
+                //QFuture<void> th6 = QtConcurrent::run(MainWindow::SMSReceive);
+                //sms_watcher.setFuture(th6);
+            }
+        }
+        else if(selectSendMsgType == 5)
+        {
+            for(int i = 0; i<invCount;i++)
+            {
+                T5SEND[selectSendMsgType-1][1] = (char) i;
+                QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            }
+            selectSendMsgType=1;
+        }
+    }
+
+    //1M
+    else if(capacity==2)
+    {
+        if(selectSendMsgType == 1)
+        {
+            for(int i = 0; i<invCount;i++)
+            {
+                C1SEND[selectSendMsgType-1][1] = (char) i;
+                QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            }
+            selectSendMsgType++;
+        }
+        else if(selectSendMsgType == 2)
+        {
+            for(int i = 0; i<invCount;i++)
+            {
+                C1SEND[selectSendMsgType-1][1] = (char) i;
+                QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            }
+            selectSendMsgType++;
+        }
+        else if(selectSendMsgType ==3)
+        {
+            for(int i = 0; i<invCount;i++)
+            {
+                C1SEND[selectSendMsgType-1][1] = (char) i;
+                QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+
+                QStandardItem *Item = new QStandardItem(QString::number(inv[i]->totalYeild));
+                model->setItem(i,9,Item);
+                Item = new QStandardItem(QString::number(inv[i]->dailyYeild));
+                model->setItem(i,8,Item);
+                Item = new QStandardItem(QString::number(inv[i]->acCurrent / 1000));
+                model->setItem(i,5,Item);
+                Item = new QStandardItem(QString::number(inv[i]->acPower / 1000));
+                model->setItem(i,6,Item);
+                Item = new QStandardItem(QString::number(inv[i]->acVoltage1 / 100));
+                model->setItem(i,4,Item);
+
+                QString state="Null";
+                if(inv[i]->operatingStatus == 0x135) state = "발전";
+                else if(inv[i]->operatingStatus == 0x571) state = "정지";
+                //else if(inv[i]->operatingStatus == 0x5BB) state = "준비";
+                else if(first==false)
+                {
+                   state = "ERROR("+QString::number(inv[i]->operatingStatus)+")";
+                   setFileLog(invIP[i]+" "+state);
+                }
+                Item = new QStandardItem(state);
+                model->setItem(i,0,Item);
+
+                Item = new QStandardItem(QString::number(inv[i]->dcCurrent / 1000));
+                model->setItem(i,2,Item);
+                Item = new QStandardItem(QString::number(inv[i]->dcVoltage / 100));
+                model->setItem(i,1,Item);
+                Item = new QStandardItem(QString::number(inv[i]->dcPower / 1000));
+                model->setItem(i,3,Item);
+                Item = new QStandardItem(QString::number(0));
+                model->setItem(i,7,Item);
+                QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+                Item = new QStandardItem(time);
+                model->setItem(i,10,Item);
+
+                ui->tableView->setModel(model);
+                ui->tableView->resizeColumnsToContents();
+                ui->tableView->resizeRowsToContents();
+            }
+            selectSendMsgType=1;
+
+            if(first==true)
+            {
+                QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+                send_watcher.setFuture(th5);
+            }
+
+            first=false;
+
+            if(send_watcher.isRunning()==false)
+            {
+                //QFuture<void> th6 = QtConcurrent::run(MainWindow::SMSReceive);
+                //sms_watcher.setFuture(th6);
+            }
+        }
+    }
 }
 
 //메세지를 담는 부분
 bool MainWindow::SendMessage(QString ipaddress, int selectSendMsgType, int count)
 {
-    //25K STP
+
     TcpClient *client = new TcpClient();
     bool check = client->TcpConnect(ipaddress,502);
 
+
     if(check==true)
     {
-        client->onConnectServer();
-        client->sendRequst(TSEND[selectSendMsgType-1],sizeof(TSEND[selectSendMsgType]));
-
-
-        client->readMessage();
-
-        if (selectSendMsgType == 1)
+        //25K STP
+        if(capacity==0)
         {
-            inv[count]->totalYeild = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
-            inv[count]->dailyYeild = (client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
+            client->onConnectServer();
+            client->sendRequst(TSEND[selectSendMsgType-1],sizeof(TSEND[selectSendMsgType-1]));
+
+
+            client->readMessage();
+
+            if (selectSendMsgType == 1)
+            {
+                inv[count]->totalYeild = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
+                inv[count]->dailyYeild = (client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
+            }
+            else if (selectSendMsgType == 2)
+            {
+                inv[count]->dcCurrentA = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+                inv[count]->dcVoltageA = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
+                inv[count]->dcPowerA = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
+                inv[count]->acPower = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
+                inv[count]->acVoltage1 = client->getBuf(39) * 0x100 + client->getBuf(40) == 65535 ? 0 : (int)((client->getBuf(39) * 0x100 + client->getBuf(40)) * qSqrt(3));
+                inv[count]->acVoltage2 = client->getBuf(43) * 0x100 + client->getBuf(44) == 65535 ? 0 : (int)((client->getBuf(43) * 0x100 + client->getBuf(44)) * qSqrt(3));
+                inv[count]->acVoltage3 = client->getBuf(47) * 0x100 + client->getBuf(48) == 65535 ? 0 : (int)((client->getBuf(47) * 0x100 + client->getBuf(48)) * qSqrt(3));
+                inv[count]->acCurrent = client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64) == 65535 ? 0 : client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64);
+                if(inv[count]->acCurrent==2123) inv[count]->acCurrent = 0;
+                inv[count]->acFrequency = client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80) == 65535 ? 0 : client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80);
+
+            }
+            else if (selectSendMsgType == 3)
+            {
+
+                inv[count]->dcCurrentB = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+                inv[count]->dcVoltageB = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
+                inv[count]->dcPowerB = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
+
+                inv[count]->dcCurrent = (inv[count]->dcCurrentA + inv[count]->dcCurrentB);
+                inv[count]->dcVoltage = (inv[count]->dcVoltageA + inv[count]->dcVoltageB) / 2;
+                inv[count]->dcPower = (inv[count]->dcPowerA + inv[count]->dcPowerB);
+
+            }
+            else if (selectSendMsgType == 4)
+            {
+                inv[count]->operatingStatus = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+
+            }
+
+            client->TcpDisconnect();
         }
-        else if (selectSendMsgType == 2)
+
+        //50K STP
+        else if(capacity==1)
         {
-            inv[count]->dcCurrentA = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
-            inv[count]->dcVoltageA = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
-            inv[count]->dcPowerA = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
-            inv[count]->acPower = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
-            inv[count]->acVoltage1 = client->getBuf(39) * 0x100 + client->getBuf(40) == 65535 ? 0 : (int)((client->getBuf(39) * 0x100 + client->getBuf(40)) * qSqrt(3));
-            inv[count]->acVoltage2 = client->getBuf(43) * 0x100 + client->getBuf(44) == 65535 ? 0 : (int)((client->getBuf(43) * 0x100 + client->getBuf(44)) * qSqrt(3));
-            inv[count]->acVoltage3 = client->getBuf(47) * 0x100 + client->getBuf(48) == 65535 ? 0 : (int)((client->getBuf(47) * 0x100 + client->getBuf(48)) * qSqrt(3));
-            inv[count]->acCurrent = client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64) == 65535 ? 0 : client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64);
-            if(inv[count]->acCurrent==2123) inv[count]->acCurrent = 0;
-            inv[count]->acFrequency = client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80) == 65535 ? 0 : client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80);
+            client->onConnectServer();
+            client->sendRequst(T5SEND[selectSendMsgType-1],sizeof(T5SEND[selectSendMsgType-1]));
 
+
+            client->readMessage();
+
+            if (selectSendMsgType == 1)
+            {
+                inv[count]->totalYeild = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
+                inv[count]->dailyYeild = (client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
+            }
+            else if (selectSendMsgType == 2)
+            {
+                inv[count]->dcCurrentA = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+                inv[count]->dcVoltageA = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
+                inv[count]->dcPowerA = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
+                inv[count]->acPower = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
+                inv[count]->acVoltage1 = client->getBuf(39) * 0x100 + client->getBuf(40) == 65535 ? 0 : (int)((client->getBuf(39) * 0x100 + client->getBuf(40)) * qSqrt(3));
+                inv[count]->acVoltage2 = client->getBuf(43) * 0x100 + client->getBuf(44) == 65535 ? 0 : (int)((client->getBuf(43) * 0x100 + client->getBuf(44)) * qSqrt(3));
+                inv[count]->acVoltage3 = client->getBuf(47) * 0x100 + client->getBuf(48) == 65535 ? 0 : (int)((client->getBuf(47) * 0x100 + client->getBuf(48)) * qSqrt(3));
+                inv[count]->acCurrent = client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64) == 65535 ? 0 : client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64);
+                inv[count]->acFrequency = client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80) == 65535 ? 0 : client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80);
+                if (inv[count]->operatingStatus == 0xFFFD)
+                {
+                    inv[count]->acPower = 0;
+                }
+            }
+            else if (selectSendMsgType == 3)
+            {
+
+                inv[count]->dcCurrentB = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+                inv[count]->dcVoltageB = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
+                inv[count]->dcPowerB = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
+
+                inv[count]->dcCurrentC = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
+                inv[count]->dcPowerC = client->getBuf(29) * 0x1000000 + client->getBuf(30) * 0x10000 + client->getBuf(31) * 0x100 + client->getBuf(32);
+                inv[count]->dcCurrentD = client->getBuf(33) * 0x1000000 + client->getBuf(34) * 0x10000 + client->getBuf(35) * 0x100 + client->getBuf(36);
+                inv[count]->dcPowerD = client->getBuf(41) * 0x1000000 + client->getBuf(42) * 0x10000 + client->getBuf(43) * 0x100 + client->getBuf(44);
+
+                //inv[count]->dcCurrent = (inv[count]->dcCurrentA + inv[count]->dcCurrentB);
+                inv[count]->dcVoltage = (inv[count]->dcVoltageA + inv[count]->dcVoltageB) / 2;
+                //inv[count]->dcPower = (inv[count]->dcPowerA + inv[count]->dcPowerB);
+
+            }
+            else if (selectSendMsgType == 4)
+            {
+                inv[count]->operatingStatus = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+
+            }
+
+            else if (selectSendMsgType == 5)
+            {
+                inv[count]->dcCurrentE = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+                inv[count]->dcPowerE = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
+                inv[count]->dcCurrentF = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
+                inv[count]->dcPowerF = client->getBuf(29) * 0x1000000 + client->getBuf(30) * 0x10000 + client->getBuf(31) * 0x100 + client->getBuf(32);
+
+                inv[count]->dcCurrent = (inv[count]->dcCurrentA + inv[count]->dcCurrentB + inv[count]->dcCurrentC + inv[count]->dcCurrentD + inv[count]->dcCurrentE
+                                         + inv[count]->dcCurrentF);
+                inv[count]->dcVoltage = (inv[count]->dcVoltageA + inv[count]->dcVoltageB) / 2;
+                inv[count]->dcPower = (inv[count]->dcPowerA + inv[count]->dcPowerB + inv[count]->dcPowerC + inv[count]->dcPowerD + inv[count]->dcPowerE
+                                        + inv[count]->dcPowerF);
+
+            }
+
+            client->TcpDisconnect();
         }
-        else if (selectSendMsgType == 3)
+
+        //1M SC
+        else if(capacity==2)
         {
+            client->onConnectServer();
+            client->sendRequst(TSEND[selectSendMsgType-1],sizeof(TSEND[selectSendMsgType-1]));
 
-            inv[count]->dcCurrentB = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
-            inv[count]->dcVoltageB = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
-            inv[count]->dcPowerB = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
 
-            inv[count]->dcCurrent = (inv[count]->dcCurrentA + inv[count]->dcCurrentB);
-            inv[count]->dcVoltage = (inv[count]->dcVoltageA + inv[count]->dcVoltageB) / 2;
-            inv[count]->dcPower = (inv[count]->dcPowerA + inv[count]->dcPowerB);
+            client->readMessage();
 
+            if (selectSendMsgType == 1)
+            {
+                inv[count]->totalYeild = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
+                inv[count]->dailyYeild = (client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
+            }
+            else if (selectSendMsgType == 2)
+            {
+                inv[count]->dcCurrent = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+                inv[count]->dcVoltage = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
+                inv[count]->dcPower = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
+                inv[count]->acPower = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
+                inv[count]->acVoltage1 = client->getBuf(39) * 0x100 + client->getBuf(40) == 65535 ? 0 : (int)((client->getBuf(39) * 0x100 + client->getBuf(40)) * qSqrt(3));
+                inv[count]->acVoltage2 = client->getBuf(43) * 0x100 + client->getBuf(44) == 65535 ? 0 : (int)((client->getBuf(43) * 0x100 + client->getBuf(44)) * qSqrt(3));
+                inv[count]->acVoltage3 = client->getBuf(47) * 0x100 + client->getBuf(48) == 65535 ? 0 : (int)((client->getBuf(47) * 0x100 + client->getBuf(48)) * qSqrt(3));
+                inv[count]->acCurrent = client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64) == 65535 ? 0 : client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64);
+
+                inv[count]->acFrequency = client->getBuf(79) * 0x1000000 + client->getBuf(80) * 0x10000 + client->getBuf(81) * 0x100 + client->getBuf(82) == 65535 ? 0 : client->getBuf(79) * 0x1000000 + client->getBuf(80) * 0x10000 + client->getBuf(81) * 0x100 + client->getBuf(82);
+
+            }
+
+            else if (selectSendMsgType == 3)
+            {
+                inv[count]->operatingStatus = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+
+            }
+
+            client->TcpDisconnect();
         }
-        else if (selectSendMsgType == 4)
-        {
-            inv[count]->operatingStatus = client->getBuf(11) * 0x100 + client->getBuf(12);
-
-        }
-
-        client->TcpDisconnect();
     }
 
 
@@ -492,8 +812,7 @@ void MainWindow::csq_ok()
 //wcdma 전송 확인
 void MainWindow::send_ok()
 {
-    ui->textBrowser->clear();
-    ui->textBrowser->append("WCDMA send ok!!");
+
 
     ui->label_5->setText("CSQ : "+QString::number(NCSQ));
 
@@ -507,6 +826,8 @@ void MainWindow::send_ok()
     }
     else
     {
+        ui->textBrowser->clear();
+        ui->textBrowser->append("WCDMA send ok!!");
 
         //QFuture<void> th6 = QtConcurrent::run(MainWindow::SMSReceive);
         //sms_watcher.setFuture(th6);
@@ -520,3 +841,22 @@ void MainWindow::send_ok()
 
 }
 
+
+void MainWindow::on_comboBox_activated(const QString &arg1)
+{
+    if(arg1 == "25K")
+    {
+        QMessageBox::information(this,"info",arg1,"OK");
+        capacity=0;
+    }
+    else if (arg1 == "50K")
+    {
+        QMessageBox::information(this,"info",arg1,"OK");
+        capacity=1;
+    }
+    else if (arg1 == "1M")
+    {
+        QMessageBox::information(this,"info",arg1,"OK");
+        capacity=2;
+    }
+}
