@@ -11,9 +11,9 @@ Inverter* inv[20]; //= new Inverter[20];
 
 //25K STP
 char TSEND[4][12] = {  0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x77, 0x43, 0x00, 0x0a,  // Yield Daily, Total (30531)
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0x31, 0x00, 0x46,  // DC Input A,V,W A (30769)
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0xed, 0x00, 0x0a,  // DC Input A,V,W B (30957)
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x9c, 0x5d, 0x00, 0x0a}; // Operating status (40029)
+                       0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0x31, 0x00, 0x46,  // DC Input A,V,W A (30769)
+                       0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x78, 0xed, 0x00, 0x0a,  // DC Input A,V,W B (30957)
+                       0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x9c, 0x5d, 0x00, 0x0a}; // Operating status (40029)
 
 //50K STP
 char T5SEND[5][12] = {  0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x77, 0x43, 0x00, 0x0a, // Yield Daily, Total (30531)
@@ -32,6 +32,7 @@ char C1SEND[3][12] = {  0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x77, 0x
 char sdata[70] = {0,};// = new char[70];    // 구서버 송신 버퍼
 char checksum = 0;              // 구서버 송신 체크섬
 
+
 int plantNumber=7777;
 int invCount=1;
 
@@ -48,6 +49,14 @@ bool reboot=false;
 int NCSQ=0;
 
 int capacity = 0;
+
+int error_count=0;
+bool send_error=false;
+
+bool black=false;
+bool count_error=false;
+
+int check_count=0;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -115,6 +124,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     wiringPiSetup();
     pinMode(1,INPUT);
+    pinMode(7,INPUT);
+    pinMode(0,OUTPUT);
+    digitalWrite(0,0);
+
 
     QFuture<QString> th1 = QtConcurrent::run(MainWindow::req_csq);
     watcher.setFuture(th1);
@@ -123,6 +136,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox->addItem("50K");
     ui->comboBox->addItem("1M");
 
+    capacity = getFileNum("capacity.txt");
+    ui->comboBox->setCurrentIndex(capacity);
 }
 
 
@@ -136,7 +151,6 @@ void MainWindow::on_pushButton_clicked()
 {
     plantNumber = ui->spinBox->value();
     setFileNum("port.txt",plantNumber);
-
 }
 
 
@@ -162,6 +176,7 @@ void MainWindow::on_pushButton_2_clicked()
     model->setHorizontalHeaderItem(10, new QStandardItem(QString("datetime")));
 
     ui->tableView->setModel(model);
+
 }
 
 //시작 버튼
@@ -646,7 +661,7 @@ bool MainWindow::SendMessage(QString ipaddress, int selectSendMsgType, int count
             else if (selectSendMsgType == 3)
             {
                 inv[count]->operatingStatus = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
-
+                inv[count]->operatingStatus1 = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
             }
 
             client->TcpDisconnect();
@@ -721,15 +736,30 @@ void MainWindow::cheslot()
 
     if(digitalRead(1)==1)
     {
-        char cmd[255];
-        sprintf(cmd,"python /home/pi/Desktop/shapes.py %d %d %d %d %d",plantNumber,jj+1,NCSQ,inv[jj]->acCurrent,inv[jj]->dailyYeild);
-        system(cmd);
-        jj++;
-        jj = ((jj)%invCount);
 
-        QFuture<QString> th1 = QtConcurrent::run(MainWindow::req_csq);
-        watcher.setFuture(th1);
+
+        digitalWrite(0,(jj%2));
+        qDebug()<<"jj : "<<(jj%2);
+
+        jj++;
+
     }
+
+
+    if(digitalRead(7)==1 && black == false)
+    {
+        black = true;
+        QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+        send_watcher.setFuture(th5);
+    }
+
+    else if (digitalRead(7)==0 && black == true)
+    {
+        black = false;
+        QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+        send_watcher.setFuture(th5);
+    }
+
 }
 
 //초기 시작
@@ -827,16 +857,30 @@ void MainWindow::send_ok()
     else
     {
         ui->textBrowser->clear();
-        ui->textBrowser->append("WCDMA send ok!!");
+        if(count_error==false){
+            ui->textBrowser->append("WCDMA send ok!!");
+            digitalWrite(0,0);
 
-        //QFuture<void> th6 = QtConcurrent::run(MainWindow::SMSReceive);
-        //sms_watcher.setFuture(th6);
+            check_count=0;
+        }
+        else {
+            ui->textBrowser->append("WCDMA send error");
+            check_count++;
+
+            if(check_count==3)
+                digitalWrite(0,1);
+        }
     }
 
     if(reboot==true)
     {
         setFileLog("reboot");
         system("reboot");
+    }
+
+    if(send_error==true)
+    {
+
     }
 
 }
@@ -859,4 +903,6 @@ void MainWindow::on_comboBox_activated(const QString &arg1)
         QMessageBox::information(this,"info",arg1,"OK");
         capacity=2;
     }
+
+    setFileNum("capacity.txt",capacity);
 }

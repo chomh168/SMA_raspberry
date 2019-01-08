@@ -155,6 +155,8 @@ public:
 
     int jj=0;
 
+
+    char buff[256];
 };
 
 

@@ -16,6 +16,12 @@ extern int NCSQ;
 
 extern Inverter* inv[20];
 
+extern int error_count;
+extern bool send_error;
+
+extern bool black;
+extern bool count_error;
+
 //문자 전송 부분
 void MainWindow::SMSReceive()
 {
@@ -137,16 +143,12 @@ void MainWindow::SMSReceive()
 
 //WCDMA를 통한 전송
 void MainWindow::SendWCDMA()
-{
-    //while(sms_watcher.isRunning()==true) QThread::sleep(20);
-
-
+{   
 
     char ATE[7] = {0x41, 0x54, 0x45, 0x30, 0x0D, 0x0A};
     char CSQ[8] = {0x41, 0x54, 0x2B, 0x43, 0x53, 0x51, 0x0D};
     char TCPTYPE[16] = {0x41, 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x54 , 0x59 , 0x50 , 0x45 , 0x3D , 0x32 , 0x0D , 0x0A};
     char PPPOPEN[13] = {0x41 , 0x54 , 0x24 , 0x24 , 0x50 , 0x50 , 0x50 , 0x4F , 0x50 , 0x45 , 0x4E , 0x0D, 0x0A};
-    //char TCPOPEN[50] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x4F , 0x50 , 0x45 , 0x4E , 0x3D  , 0x32 , 0x32 , 0x30 , 0x2E , 0x31 , 0x32 , 0x32 , 0x2E , 0x32 , 0x30 , 0x33 , 0x2E , 0x31 , 0x31 , 0x31 , 0x2C , 0x37 , 0x37 , 0x37 , 0x38 , 0x0D , 0x0A};
     char TCPOPEN[50] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x4F , 0x50 , 0x45 , 0x4E , 0x3D  , 0x31 , 0x32 , 0x31 , 0x2E , 0x31 , 0x35 , 0x39 , 0x2E , 0x33 , 0x30 , 0x2E , 0x31, 0x35 , 0x2C , 0x37 , 0x37}; //, 0x37 , 0x37 , 0x37 , 0x38 , 0x0D , 0x0A};
 
     char TCPWRITE[256] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x57 , 0x52 , 0x49 , 0x54 , 0x45 , 0x3D};//, 0xFF, 0xFF};
@@ -337,6 +339,7 @@ QString MainWindow::uart_ch(char *ch, int state)
             if(feed.indexOf("ERROR")!=-1) //에러 미발생
             {
                 wcdma_error=true;
+                count_error=false;
             }
 
         serialFlush(fd);
@@ -409,11 +412,13 @@ void MainWindow::send_append(char *TCPWRITE)
 {
     char buffer[140]={0,};
     char ccs;
+    //black=0;
 
     bool error_flag = false;
 
     for(int i = 0;i<invCount;i++)
     {
+
         if(inv[i]->operatingStatus == 0x571)
             inv[i]->acPower=0;
 
@@ -428,11 +433,11 @@ void MainWindow::send_append(char *TCPWRITE)
         ccs ^= (char)25;
         ccs ^= (char)0;
         ccs ^= (char)0;
-        ccs ^= (char)0;
+        ccs ^= (char)black;
         ccs ^= (char)(inv[i]->operatingStatus/0x100);
         ccs ^= (char)(inv[i]->operatingStatus%0x100);
-        ccs ^= (char)(0);
-        ccs ^= (char)(0);
+        ccs ^= (char)(inv[i]->operatingStatus1/0x100);
+        ccs ^= (char)(inv[i]->operatingStatus1/0x100);
         ccs ^= (char)(0);
         ccs ^= (char)(0);
         ccs ^= (char)(0);
@@ -499,67 +504,67 @@ void MainWindow::send_append(char *TCPWRITE)
             (unsigned char)(plantNumber/0x100),
             (unsigned char)(plantNumber%0x100),
             (inv[i]->invID+0x31),
-            (unsigned char)0,
-            (unsigned char)25,
-            (unsigned char)0,
-            (unsigned char)0,
-            (unsigned char)0,
-            (unsigned char)(inv[i]->operatingStatus/0x100),
-            (unsigned char)(inv[i]->operatingStatus%0x100),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            (unsigned char)((inv[i]->dcVoltage / 100)/0x100),
-            (unsigned char)((inv[i]->dcVoltage / 100)%0x100),
-            (unsigned char)((inv[i]->dcCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->dcCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acVoltage1 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage1 / 100)%0x100),
-            (unsigned char)((inv[i]->acVoltage2 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage2 / 100)%0x100),
-            (unsigned char)((inv[i]->acVoltage3 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage3 / 100)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acFrequency/10)/0x100),
-            (unsigned char)((inv[i]->acFrequency/10)%0x100),
-            (unsigned char)((inv[i]->acVoltage1 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage1 / 100)%0x100),
-            (unsigned char)((inv[i]->acVoltage2 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage2 / 100)%0x100),
-            (unsigned char)((inv[i]->acVoltage3 / 100)/0x100),
-            (unsigned char)((inv[i]->acVoltage3 / 100)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),
-            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),
-            (unsigned char)((inv[i]->acFrequency/10)/0x100),
-            (unsigned char)((inv[i]->acFrequency/10)%0x100),
-            (unsigned char)((inv[i]->dcPower / 100)/0x100),
-            (unsigned char)((inv[i]->dcPower / 100)%0x100),
-            (unsigned char)((inv[i]->totalYeild>>24)&0xff),
-            (unsigned char)((inv[i]->totalYeild>>16)&0xff),
-            (unsigned char)((inv[i]->totalYeild>>8)&0xff),
-            (unsigned char)(inv[i]->totalYeild&0xff),
-            (unsigned char)((inv[i]->acPower / 100)/0x100),
-            (unsigned char)((inv[i]->acPower / 100)%0x100),
-            (unsigned char)((inv[i]->acPower / 100)/0x100),
-            (unsigned char)((inv[i]->acPower / 100)%0x100),
-            (unsigned char)(inv[i]->dailyYeild/0x100),
-            (unsigned char)(inv[i]->dailyYeild%0x100),
-            (unsigned char)(0),
-            (unsigned char)(0),
-            ccs,
-            0xaa
+            (unsigned char)0,  //0 1
+            (unsigned char)25, //2 3
+            (unsigned char)0,  //4 5
+            (unsigned char)0,  //6 7
+            (unsigned char)black,  //8 9
+            (unsigned char)(inv[i]->operatingStatus/0x100), //10 11
+            (unsigned char)(inv[i]->operatingStatus%0x100), //12 13
+            (unsigned char)(inv[i]->operatingStatus1/0x100), //14
+            (unsigned char)(inv[i]->operatingStatus1/0x100), //16
+            (unsigned char)(0), //18
+            (unsigned char)(0),  //20
+            (unsigned char)(0),  //22
+            (unsigned char)(0),  //24
+            (unsigned char)((inv[i]->dcVoltage / 100)/0x100),  //26
+            (unsigned char)((inv[i]->dcVoltage / 100)%0x100),  //28
+            (unsigned char)((inv[i]->dcCurrent / 1000)/0x100),  //30
+            (unsigned char)((inv[i]->dcCurrent / 1000)%0x100),  //32
+            (unsigned char)((inv[i]->acVoltage1 / 100)/0x100),  //34
+            (unsigned char)((inv[i]->acVoltage1 / 100)%0x100),  //36
+            (unsigned char)((inv[i]->acVoltage2 / 100)/0x100),  //38
+            (unsigned char)((inv[i]->acVoltage2 / 100)%0x100),  //40
+            (unsigned char)((inv[i]->acVoltage3 / 100)/0x100),  //42
+            (unsigned char)((inv[i]->acVoltage3 / 100)%0x100),  //44
+            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),  //46
+            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),  //48
+            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),  //50
+            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),  //52
+            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),  //54
+            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),  //56
+            (unsigned char)((inv[i]->acFrequency/10)/0x100),  //58
+            (unsigned char)((inv[i]->acFrequency/10)%0x100),  //60
+            (unsigned char)((inv[i]->acVoltage1 / 100)/0x100),  //62
+            (unsigned char)((inv[i]->acVoltage1 / 100)%0x100),  //64
+            (unsigned char)((inv[i]->acVoltage2 / 100)/0x100),  //66
+            (unsigned char)((inv[i]->acVoltage2 / 100)%0x100),  //68
+            (unsigned char)((inv[i]->acVoltage3 / 100)/0x100),  //70
+            (unsigned char)((inv[i]->acVoltage3 / 100)%0x100),  //72
+            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),  //74
+            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),  //76
+            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),  //78
+            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),  //80
+            (unsigned char)((inv[i]->acCurrent / 1000)/0x100),  //82
+            (unsigned char)((inv[i]->acCurrent / 1000)%0x100),  //84
+            (unsigned char)((inv[i]->acFrequency/10)/0x100),  //86
+            (unsigned char)((inv[i]->acFrequency/10)%0x100),  //88
+            (unsigned char)((inv[i]->dcPower / 100)/0x100),  //90
+            (unsigned char)((inv[i]->dcPower / 100)%0x100),  //92
+            (unsigned char)((inv[i]->totalYeild>>24)&0xff),  //94
+            (unsigned char)((inv[i]->totalYeild>>16)&0xff),  //96
+            (unsigned char)((inv[i]->totalYeild>>8)&0xff),  //98
+            (unsigned char)(inv[i]->totalYeild&0xff),  //100
+            (unsigned char)((inv[i]->acPower / 100)/0x100),  //102
+            (unsigned char)((inv[i]->acPower / 100)%0x100),  //104
+            (unsigned char)((inv[i]->acPower / 100)/0x100),  //106
+            (unsigned char)((inv[i]->acPower / 100)%0x100),  //108
+            (unsigned char)(inv[i]->dailyYeild/0x100),  //110
+            (unsigned char)(inv[i]->dailyYeild%0x100),  //112
+            (unsigned char)(0),  //114
+            (unsigned char)(0),  //116
+            ccs,  //118
+            0xaa  //120
             );
 
         for(int i = 13 ; i<136+13;i++)
@@ -588,6 +593,12 @@ void MainWindow::send_append(char *TCPWRITE)
         {
             wcdma_count=0;
             wcdma_error=false;
+            count_error=true;
+
+            error_count++;
+
+            if(error_count==5)
+                send_error=true;
         }
 
         wcdma_count++;
@@ -595,6 +606,10 @@ void MainWindow::send_append(char *TCPWRITE)
     else
     {
         wcdma_error=false;
+        count_error=false;
+        wcdma_count=0;
+
+        error_count=0;
     }
 
 }
