@@ -281,7 +281,15 @@
     </property>
     <addaction name="action"/>
    </widget>
+   <widget class="QMenu" name="menuReset">
+    <property name="title">
+     <string>reset</string>
+    </property>
+    <addaction name="actionHW_reset_2"/>
+    <addaction name="actionSW_reset_2"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="menuReset"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -298,6 +306,16 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionHW_reset_2">
+   <property name="text">
+    <string>HW reset</string>
+   </property>
+  </action>
+  <action name="actionSW_reset_2">
+   <property name="text">
+    <string>SW reset</string>
    </property>
   </action>
  </widget>

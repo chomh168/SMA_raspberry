@@ -9,7 +9,9 @@ extern char sdata[70];// = new char[70];    // 구서버 송신 버퍼
 extern char checksum;              // 구서버 송신 체크섬
 
 extern Inverter* inv[20];
-extern char TSEND[4][12];
+
+
+extern char black;
 
 //checksum
 void addPacket(int cnt, int value)
@@ -41,6 +43,9 @@ void MainWindow::SendServerHstec()
 
     for (int i = 0; i < invCount; i++)
     {
+        if(inv[i]->operatingStatus == 0x571)
+            inv[i]->acPower=0;
+
         addPacket(0, 0x55);
         checksum = 0;
         addPacket(1, 0x54);
@@ -51,11 +56,11 @@ void MainWindow::SendServerHstec()
         addPacket(6, 25);       // adc1
         addPacket(7, 0);        // adc0
         addPacket(8, 0);        // adc0
-        addPacket(9, 0);        // blackout im_key
+        addPacket(9, black);        // blackout im_key
         addPacket(10, inv[i]->operatingStatus / 0x100);    // inverter_status
         addPacket(11, inv[i]->operatingStatus % 0x100);    // inverter_status
-        addPacket(12, 0);    // inverter_status
-        addPacket(13, 0);    // inverter_status
+        addPacket(12, inv[i]->operatingStatus1 / 0x100);    // inverter_status
+        addPacket(13, inv[i]->operatingStatus1 / 0x100);    // inverter_status
         addPacket(14, 0);    // inverter_status
         addPacket(15, 0);    // inverter_status
         addPacket(16, 0);    // inverter_status
@@ -124,7 +129,7 @@ void MainWindow::SendServerHstec()
 
         qDebug()<<"s : "<<hex<<sdata;
         SendMessageHstec("hstec.kr", eeport, sdata,sizeof(sdata));
-        //SendMessageHstec("220.122.203.111",7778,sdata,sizeof(sdata));
+        //SendMessageHstec("223.62.56.213",7780,sdata,sizeof(sdata));
      }
 }
 

@@ -58,6 +58,7 @@ bool count_error=false;
 
 int check_count=0;
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -73,7 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //타이머 설정
     serTimer = new QTimer(this);
-    serTimer->setInterval(600000);
+    serTimer->setInterval(300000);
     invTimer = new QTimer(this);
     invTimer->setInterval(10000);
     cheTimer = new QTimer(this);
@@ -138,6 +139,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     capacity = getFileNum("capacity.txt");
     ui->comboBox->setCurrentIndex(capacity);
+
+    toggle = getFileNum("mode.txt");
+    if(toggle==true)
+        ui->pushButton_9->setText("WCD");
+    else
+        ui->pushButton_9->setText("LAN");
+
+    connect(ui->actionHW_reset_2, SIGNAL(triggered()),this,SLOT(hw_reset()));
+    connect(ui->actionSW_reset_2, SIGNAL(triggered()),this,SLOT(sw_reset()));
 }
 
 
@@ -293,11 +303,21 @@ void MainWindow::invslot()
 
         if(first==true)
         {
-            QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
-            send_watcher.setFuture(th5);
+            ui->textBrowser->clear();
+            ui->textBrowser->append("전송중..");
+
+            if(toggle==true){
+                QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+                send_watcher.setFuture(th5);
+            }
+            else{
+                SendServerHstec();
+            }
+
+            first=false;
         }
 
-        first=false;
+
 
         if(send_watcher.isRunning()==false)
         {
@@ -390,11 +410,21 @@ void MainWindow::invslot()
 
             if(first==true)
             {
-                QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
-                send_watcher.setFuture(th5);
+                ui->textBrowser->clear();
+                ui->textBrowser->append("전송중..");
+
+                if(toggle==true){
+                    QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+                    send_watcher.setFuture(th5);
+                }
+                else{
+                    SendServerHstec();
+                }
+
+                first=false;
             }
 
-            first=false;
+
 
             if(send_watcher.isRunning()==false)
             {
@@ -484,11 +514,20 @@ void MainWindow::invslot()
 
             if(first==true)
             {
-                QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
-                send_watcher.setFuture(th5);
+                ui->textBrowser->clear();
+                ui->textBrowser->append("전송중..");
+
+                if(toggle==true){
+                    QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+                    send_watcher.setFuture(th5);
+                }
+                else{
+                    SendServerHstec();
+                }
+
+                first=false;
             }
 
-            first=false;
 
             if(send_watcher.isRunning()==false)
             {
@@ -633,7 +672,7 @@ bool MainWindow::SendMessage(QString ipaddress, int selectSendMsgType, int count
         else if(capacity==2)
         {
             client->onConnectServer();
-            client->sendRequst(TSEND[selectSendMsgType-1],sizeof(TSEND[selectSendMsgType-1]));
+            client->sendRequst(C1SEND[selectSendMsgType-1],sizeof(C1SEND[selectSendMsgType-1]));
 
 
             client->readMessage();
@@ -649,9 +688,9 @@ bool MainWindow::SendMessage(QString ipaddress, int selectSendMsgType, int count
                 inv[count]->dcVoltage = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
                 inv[count]->dcPower = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
                 inv[count]->acPower = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
-                inv[count]->acVoltage1 = client->getBuf(39) * 0x100 + client->getBuf(40) == 65535 ? 0 : (int)((client->getBuf(39) * 0x100 + client->getBuf(40)) * qSqrt(3));
-                inv[count]->acVoltage2 = client->getBuf(43) * 0x100 + client->getBuf(44) == 65535 ? 0 : (int)((client->getBuf(43) * 0x100 + client->getBuf(44)) * qSqrt(3));
-                inv[count]->acVoltage3 = client->getBuf(47) * 0x100 + client->getBuf(48) == 65535 ? 0 : (int)((client->getBuf(47) * 0x100 + client->getBuf(48)) * qSqrt(3));
+                inv[count]->acVoltage1 = client->getBuf(51) * 0x100 + client->getBuf(52) == 65535 ? 0 : (int)((client->getBuf(51) * 0x100 + client->getBuf(52)) * qSqrt(3));
+                inv[count]->acVoltage2 = client->getBuf(55) * 0x100 + client->getBuf(56) == 65535 ? 0 : (int)((client->getBuf(55) * 0x100 + client->getBuf(56)) * qSqrt(3));
+                inv[count]->acVoltage3 = client->getBuf(59) * 0x100 + client->getBuf(60) == 65535 ? 0 : (int)((client->getBuf(59) * 0x100 + client->getBuf(60)) * qSqrt(3));
                 inv[count]->acCurrent = client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64) == 65535 ? 0 : client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64);
 
                 inv[count]->acFrequency = client->getBuf(79) * 0x1000000 + client->getBuf(80) * 0x10000 + client->getBuf(81) * 0x100 + client->getBuf(82) == 65535 ? 0 : client->getBuf(79) * 0x1000000 + client->getBuf(80) * 0x10000 + client->getBuf(81) * 0x100 + client->getBuf(82);
@@ -676,12 +715,19 @@ bool MainWindow::SendMessage(QString ipaddress, int selectSendMsgType, int count
 //서버 전송
 void MainWindow::on_pushButton_6_clicked()
 {
-    serslot();
+    if(send_watcher.isRunning()==false)
+        serslot();
+    else
+        QMessageBox::information(this,"nofi","전송중","OK");
+
 }
 
 //서버 전송
 void MainWindow::serslot()
 {
+    ui->textBrowser->clear();
+    ui->textBrowser->append("전송중..");
+
     if(toggle==true)
     {
         while(sms_watcher.isRunning()==true) QThread::sleep(20);
@@ -720,11 +766,13 @@ void MainWindow::on_pushButton_9_clicked()
     {
         toggle=false;
         ui->pushButton_9->setText("LAN");
+        setFileNum("mode.txt",toggle);
     }
     else
     {
         toggle=true;
         ui->pushButton_9->setText("WCD");
+        setFileNum("mode.txt",toggle);
     }
 }
 
@@ -749,15 +797,25 @@ void MainWindow::cheslot()
     if(digitalRead(7)==1 && black == false)
     {
         black = true;
-        QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
-        send_watcher.setFuture(th5);
+        if(toggle==true){
+            QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+            send_watcher.setFuture(th5);
+        }
+        else{
+            SendServerHstec();
+        }
     }
 
     else if (digitalRead(7)==0 && black == true)
     {
         black = false;
-        QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
-        send_watcher.setFuture(th5);
+        if(toggle==true){
+            QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+            send_watcher.setFuture(th5);
+        }
+        else{
+            SendServerHstec();
+        }
     }
 
 }
@@ -867,7 +925,7 @@ void MainWindow::send_ok()
             ui->textBrowser->append("WCDMA send error");
             check_count++;
 
-            if(check_count==3)
+            if(check_count==6)
                 digitalWrite(0,1);
         }
     }
@@ -905,4 +963,14 @@ void MainWindow::on_comboBox_activated(const QString &arg1)
     }
 
     setFileNum("capacity.txt",capacity);
+}
+
+void MainWindow::hw_reset()
+{
+    digitalWrite(0,1);
+}
+
+void MainWindow::sw_reset()
+{
+    system("reboot");
 }

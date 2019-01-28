@@ -64,7 +64,6 @@ public:
 
     QString csq;
 
-    QAction *pSlotTest1;
 
 
 private slots:
@@ -77,7 +76,6 @@ private slots:
     void on_pushButton_7_clicked();
     void on_pushButton_8_clicked();
     void on_pushButton_9_clicked();
-
     void on_comboBox_activated(const QString &arg1);
 
 public slots:
@@ -87,8 +85,8 @@ public slots:
     void strslot();
     void csq_ok();
     void send_ok();
-
-public slots:
+    void hw_reset();
+    void sw_reset();
 
 
 
