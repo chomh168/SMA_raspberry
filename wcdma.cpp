@@ -191,6 +191,13 @@ void MainWindow::SendWCDMA()
         TCPOPEN[30]=0x0D;
         TCPOPEN[31]=0x0A;
 
+    } else if(plantNumber<9500){
+        //7781;
+        TCPOPEN[28]=0x38;
+        TCPOPEN[29]=0x31;
+        TCPOPEN[30]=0x0D;
+        TCPOPEN[31]=0x0A;
+
     }
 
     qDebug()<<"tcpopen : "<<TCPOPEN;
@@ -262,9 +269,11 @@ void MainWindow::SendWCDMA()
 
                     }
                     */
-                    if(rec.indexOf("5552FFFF")!=-1)
+                    if(rec.indexOf("5552FFFF")>0)
+                    {
                         qDebug()<<"FFFF";
                         reboot=true;
+                    }
                 }
 
             }

@@ -106,7 +106,7 @@ unsigned char TcpClient::getBuf(int index)
 void TcpClient::setFileLog(QString log)
 {
     QFile *file = new QFile;
-    QString str = "log.txt";
+    QString str = "networklog.txt";
 
     file->setFileName(QApplication::applicationDirPath() + "/" + str); //파일의 위치와 파일명 설정
 
