@@ -28,7 +28,9 @@ SOURCES += \
     tcpclient.cpp \
     file.cpp \
     wcdma.cpp \
-    lan.cpp
+    lan.cpp \
+    clickevent.cpp \
+    inverter_stp25k.cpp
 
 HEADERS += \
         mainwindow.h \

@@ -95,12 +95,6 @@ private:
 
 
 
-
-private:
-    int nport;
-    int ninverter;
-
-
 public:
 
     int selectSendMsgType = 1;

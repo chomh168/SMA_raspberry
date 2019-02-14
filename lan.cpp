@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "tcpclient.h"
 #include "data.h"
+#include "ui_mainwindow.h"
 
 extern int plantNumber;
 extern int invCount;
@@ -9,8 +10,6 @@ extern char sdata[70];// = new char[70];    // 구서버 송신 버퍼
 extern char checksum;              // 구서버 송신 체크섬
 
 extern Inverter* inv[20];
-
-
 extern char black;
 
 //checksum
@@ -19,6 +18,7 @@ void addPacket(int cnt, int value)
     sdata[cnt] = (char)(value&0xff);
     checksum ^= sdata[cnt];
 }
+
 
 // INTERNET을 통한 전송
 void MainWindow::SendServerHstec()
@@ -38,7 +38,7 @@ void MainWindow::SendServerHstec()
         eeport = 7780;
 
     } else if(plantNumber<9500){
-        eeport = 7780;
+        eeport = 7781;
 
     }
 
@@ -132,9 +132,29 @@ void MainWindow::SendServerHstec()
 
         qDebug()<<"s : "<<hex<<sdata;
         SendMessageHstec("hstec.kr", eeport, sdata,sizeof(sdata));
-        //SendMessageHstec("223.62.56.213",7780,sdata,sizeof(sdata));
+
      }
 }
 
+//LAN을 통한 전송 부분
+void MainWindow::SendMessageHstec(QString server, int port, char* data,int size)
+{
+    TcpClient *client = new TcpClient();
 
+    if(client->TcpConnect(server,port)==true)
+    {
+        client->onConnectServer();
+        client->sendRequst(data,size);
+
+        ui->textBrowser->clear();
+        ui->textBrowser->append("HSTEC send ok!!");
+    }
+    else
+    {
+        ui->textBrowser->clear();
+        ui->textBrowser->append("HSTEC send failed..");
+    }
+
+    client->TcpDisconnect();
+}
 
