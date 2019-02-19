@@ -46,7 +46,7 @@ void MainWindow::SendServerHstec()
 
     for (int i = 0; i < invCount; i++)
     {
-        if(inv[i]->operatingStatus == 0x571)
+        if(inv[i]->operatingStatus == 0x571 || inv[i]->operatingStatus == 0xFFFD)
             inv[i]->acPower=0;
 
         addPacket(0, 0x55);

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "data.h"
+#include "ui_mainwindow.h"
 
 #define INF 1
 
@@ -9,9 +10,6 @@ extern int invCount;
 
 extern bool wcdma_error;
 extern int wcdma_count;
-
-extern bool wfirst;
-extern QString wread;
 
 extern bool reboot;
 extern int NCSQ;
@@ -24,7 +22,10 @@ extern bool send_error;
 extern bool black;
 extern bool count_error;
 
-//문자 전송 부분
+extern int check_count;
+
+//문자 리셋  부분
+/*
 void MainWindow::SMSReceive()
 {
     char CMGR[12] = {0x41, 0x54 , 0x2B , 0x43 , 0x4D , 0x47 , 0x52 , 0x3D , 0x30 , 0x0D};
@@ -142,6 +143,7 @@ void MainWindow::SMSReceive()
     if(reboot==true)
         system("reboot");
 }
+*/
 
 //WCDMA를 통한 전송
 void MainWindow::SendWCDMA()
@@ -424,7 +426,9 @@ void MainWindow::send_append(char *TCPWRITE)
     for(int i = 0;i<invCount;i++)
     {
 
-        if(inv[i]->operatingStatus == 0x571)
+           //black=0; //test
+
+        if(inv[i]->operatingStatus == 0x571 || inv[i]->operatingStatus == 0xFFFD) //acpower 값이상 예외처리  예외처리
             inv[i]->acPower=0;
 
         ccs = 0;
@@ -619,6 +623,60 @@ void MainWindow::send_append(char *TCPWRITE)
 
 }
 
+
+
+//csq 확인
+void MainWindow::csq_ok()
+{
+    csq = watcher.result();
+    if(csq.length()==7)
+        NCSQ=0;
+    else
+        NCSQ = csq[8].digitValue()*10 + csq[9].digitValue();
+
+    ui->label_5->setText("CSQ : "+QString::number(NCSQ));
+    QMessageBox::information(this,"info","CSQ : "+QString::number(NCSQ),"OK");
+}
+
+//wcdma 전송 확인
+void MainWindow::send_ok()
+{
+    ui->label_5->setText("CSQ : "+QString::number(NCSQ));
+
+    if(wcdma_error==true)
+    {
+        while(sms_watcher.isRunning()==true) QThread::sleep(20);
+
+        setFileLog("wcdma error");
+        QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+        send_watcher.setFuture(th5);
+    }
+    else
+    {
+        ui->textBrowser->clear();
+        if(count_error==false){
+            ui->textBrowser->append("WCDMA send ok!!");
+            digitalWrite(0,0);
+
+            check_count=0;
+        }
+        else {
+            ui->textBrowser->append("WCDMA send error");
+            check_count++;
+
+            if(check_count==6)
+                digitalWrite(0,1);
+        }
+    }
+
+    if(reboot==true)
+    {
+        setFileLog("reboot");
+        system("reboot");
+    }
+
+
+}
 
 
 //csq 확인
