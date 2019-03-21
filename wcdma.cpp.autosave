@@ -449,8 +449,8 @@ void MainWindow::send_append(char *TCPWRITE)
         ccs ^= (char)(inv[i]->operatingStatus1%0x100);
         ccs ^= (char)(inv[i]->operatingStatus2/0x100);
         ccs ^= (char)(inv[i]->operatingStatus2%0x100);
-        ccs ^= (char)(inv[i]->operatingStatus3 / 0x100);
-        ccs ^= (char)(inv[i]->operatingStatus3 % 0x100);
+        ccs ^= (char)(inv[i]->operatingStatus3/0x100);
+        ccs ^= (char)(inv[i]->operatingStatus3%0x100);
 
         ccs ^= (char)((inv[i]->dcVoltage / 100)/0x100);
         ccs ^= (char)((inv[i]->dcVoltage / 100)%0x100);

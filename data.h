@@ -34,12 +34,16 @@ struct Inverter
         int dcPower;
         int acPower;
         int acCurrent;
+        int acCurrent2;
+        int acCurrent3;
         int acVoltage1;
         int acVoltage2;
         int acVoltage3;
         int acFrequency;
         int operatingStatus;
         int operatingStatus1;
+        int operatingStatus2;
+        int operatingStatus3;
 
        Inverter(int no)
        {
@@ -65,12 +69,16 @@ struct Inverter
            dcPower = 0;
            acPower = 0;
            acCurrent = 0;
+           acCurrent2 = 0;
+           acCurrent3 = 0;
            acVoltage1 = 0;
            acVoltage2 = 0;
            acVoltage3 = 0;
            acFrequency = 0;
            operatingStatus = 0;
            operatingStatus1 = 0;
+           operatingStatus2 = 0;
+           operatingStatus3 = 0;
        }
 };
 

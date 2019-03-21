@@ -55,19 +55,19 @@ void MainWindow::SendServerHstec()
         addPacket(2, (plantNumber / 0x100));
         addPacket(3, (plantNumber % 0x100));
         addPacket(4, (inv[i]->invID + 0x31));
-        addPacket(5, 0);        // adc0
-        addPacket(6, 25);       // adc1
-        addPacket(7, 0);        // adc0
+        addPacket(5, 19);        // adc0
+        addPacket(6, 0);       // adc1
+        addPacket(7, 19);        // adc0
         addPacket(8, 0);        // adc0
         addPacket(9, black);        // blackout im_key
         addPacket(10, inv[i]->operatingStatus / 0x100);    // inverter_status
         addPacket(11, inv[i]->operatingStatus % 0x100);    // inverter_status
         addPacket(12, inv[i]->operatingStatus1 / 0x100);    // inverter_status
-        addPacket(13, inv[i]->operatingStatus1 / 0x100);    // inverter_status
-        addPacket(14, 0);    // inverter_status
-        addPacket(15, 0);    // inverter_status
-        addPacket(16, 0);    // inverter_status
-        addPacket(17, 0);    // inverter_status
+        addPacket(13, inv[i]->operatingStatus1 % 0x100);    // inverter_status
+        addPacket(14, inv[i]->operatingStatus2 / 0x100);    // inverter_status
+        addPacket(15, inv[i]->operatingStatus2 % 0x100);    // inverter_status
+        addPacket(16, inv[i]->operatingStatus3 / 0x100);    // inverter_status
+        addPacket(17, inv[i]->operatingStatus3 % 0x100);    // inverter_status
         addPacket(18, (inv[i]->dcVoltage / 100) / 0x100);
         addPacket(19, (inv[i]->dcVoltage / 100) % 0x100);
         addPacket(20, (inv[i]->dcCurrent / 1000) / 0x100);
@@ -82,10 +82,10 @@ void MainWindow::SendServerHstec()
 
         addPacket(28, (inv[i]->acCurrent / 1000) / 0x100);
         addPacket(29, (inv[i]->acCurrent / 1000) % 0x100);
-        addPacket(30, (inv[i]->acCurrent / 1000) / 0x100);
-        addPacket(31, (inv[i]->acCurrent / 1000) % 0x100);
-        addPacket(32, (inv[i]->acCurrent / 1000) / 0x100);
-        addPacket(33, (inv[i]->acCurrent / 1000) % 0x100);
+        addPacket(30, (inv[i]->acCurrent2 / 1000) / 0x100);
+        addPacket(31, (inv[i]->acCurrent2 / 1000) % 0x100);
+        addPacket(32, (inv[i]->acCurrent3 / 1000) / 0x100);
+        addPacket(33, (inv[i]->acCurrent3 / 1000) % 0x100);
 
         addPacket(34, (inv[i]->acFrequency / 10) / 0x100);
         addPacket(35, (inv[i]->acFrequency / 10) % 0x100);
@@ -99,10 +99,10 @@ void MainWindow::SendServerHstec()
 
         addPacket(42, (inv[i]->acCurrent / 1000) / 0x100);
         addPacket(43, (inv[i]->acCurrent / 1000) % 0x100);
-        addPacket(44, (inv[i]->acCurrent / 1000) / 0x100);
-        addPacket(45, (inv[i]->acCurrent / 1000) % 0x100);
-        addPacket(46, (inv[i]->acCurrent / 1000) / 0x100);
-        addPacket(47, (inv[i]->acCurrent / 1000) % 0x100);
+        addPacket(44, (inv[i]->acCurrent2 / 1000) / 0x100);
+        addPacket(45, (inv[i]->acCurrent2 / 1000) % 0x100);
+        addPacket(46, (inv[i]->acCurrent3 / 1000) / 0x100);
+        addPacket(47, (inv[i]->acCurrent3 / 1000) % 0x100);
 
         addPacket(48, (inv[i]->acFrequency / 10) / 0x100);
         addPacket(49, (inv[i]->acFrequency / 10) % 0x100);

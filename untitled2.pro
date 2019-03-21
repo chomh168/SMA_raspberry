@@ -32,7 +32,8 @@ SOURCES += \
     clickevent.cpp \
     inverter_stp25k.cpp \
     inverter_stp50k.cpp \
-    inverter_sc1m.cpp
+    inverter_sc1m.cpp \
+    inverter_stp60k.cpp
 
 HEADERS += \
         mainwindow.h \

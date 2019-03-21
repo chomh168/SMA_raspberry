@@ -48,10 +48,12 @@ public:
     static bool SendMessage25K(QString server, int sendNum, int index);
     static bool SendMessage50K(QString server, int sendNum, int index);
     static bool SendMessage1M(QString server, int sendNum, int index);
+    static bool SendMessage60K(QString server, int sendNum, int index);
 
     void inv25K();
     void inv50K();
     void inv1M();
+    void inv60K();
 
     void SendServerHstec();
     void SendMessageHstec(QString server, int port, char *data,int size);

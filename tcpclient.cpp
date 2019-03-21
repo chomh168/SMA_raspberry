@@ -5,6 +5,7 @@
 TcpClient::TcpClient(QObject *parent) : QObject (parent)
 {
     m_socket = new QTcpSocket;
+    memset(buffer,0,sizeof(buffer));
 }
 
 TcpClient::~TcpClient()

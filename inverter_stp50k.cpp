@@ -140,66 +140,70 @@ bool MainWindow::SendMessage50K(QString ipAddress, int selectSendMsgType, int in
 
 
     client->readMessage();
-
-    if (selectSendMsgType == 1)
+    if(check==true)
     {
-        inv[index]->totalYeild = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
-        inv[index]->dailyYeild = (client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
-    }
-    else if (selectSendMsgType == 2)
-    {
-        inv[index]->dcCurrentA = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
-        inv[index]->dcVoltageA = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
-        inv[index]->dcPowerA = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
-        inv[index]->acPower = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
-        inv[index]->acVoltage1 = client->getBuf(39) * 0x100 + client->getBuf(40) == 65535 ? 0 : (int)((client->getBuf(39) * 0x100 + client->getBuf(40)) * qSqrt(3));
-        inv[index]->acVoltage2 = client->getBuf(43) * 0x100 + client->getBuf(44) == 65535 ? 0 : (int)((client->getBuf(43) * 0x100 + client->getBuf(44)) * qSqrt(3));
-        inv[index]->acVoltage3 = client->getBuf(47) * 0x100 + client->getBuf(48) == 65535 ? 0 : (int)((client->getBuf(47) * 0x100 + client->getBuf(48)) * qSqrt(3));
-        inv[index]->acCurrent = client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64) == 65535 ? 0 : client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64);
-        inv[index]->acFrequency = client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80) == 65535 ? 0 : client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80);
-        if (inv[index]->operatingStatus == 0xFFFD)
+        if (selectSendMsgType == 1)
         {
-            inv[index]->acPower = 0;
+            inv[index]->totalYeild = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
+            inv[index]->dailyYeild = (client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
+        }
+        else if (selectSendMsgType == 2)
+        {
+            inv[index]->dcCurrentA = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+            inv[index]->dcVoltageA = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
+            inv[index]->dcPowerA = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
+            inv[index]->acPower = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
+            inv[index]->acVoltage1 = client->getBuf(39) * 0x100 + client->getBuf(40) == 65535 ? 0 : (int)((client->getBuf(39) * 0x100 + client->getBuf(40)) * qSqrt(3));
+            inv[index]->acVoltage2 = client->getBuf(43) * 0x100 + client->getBuf(44) == 65535 ? 0 : (int)((client->getBuf(43) * 0x100 + client->getBuf(44)) * qSqrt(3));
+            inv[index]->acVoltage3 = client->getBuf(47) * 0x100 + client->getBuf(48) == 65535 ? 0 : (int)((client->getBuf(47) * 0x100 + client->getBuf(48)) * qSqrt(3));
+            inv[index]->acCurrent = client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64) == 65535 ? 0 : client->getBuf(61) * 0x1000000 + client->getBuf(62) * 0x10000 + client->getBuf(63) * 0x100 + client->getBuf(64);
+            inv[index]->acCurrent2 = inv[index]->acCurrent;
+            inv[index]->acCurrent3 = inv[index]->acCurrent;
+
+            inv[index]->acFrequency = client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80) == 65535 ? 0 : client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80);
+            if (inv[index]->operatingStatus == 0xFFFD)
+            {
+                inv[index]->acPower = 0;
+            }
+        }
+        else if (selectSendMsgType == 3)
+        {
+
+            inv[index]->dcCurrentB = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+            inv[index]->dcVoltageB = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
+            inv[index]->dcPowerB = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
+
+            inv[index]->dcCurrentC = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
+            inv[index]->dcPowerC = client->getBuf(29) * 0x1000000 + client->getBuf(30) * 0x10000 + client->getBuf(31) * 0x100 + client->getBuf(32);
+            inv[index]->dcCurrentD = client->getBuf(33) * 0x1000000 + client->getBuf(34) * 0x10000 + client->getBuf(35) * 0x100 + client->getBuf(36);
+            inv[index]->dcPowerD = client->getBuf(41) * 0x1000000 + client->getBuf(42) * 0x10000 + client->getBuf(43) * 0x100 + client->getBuf(44);
+
+
+            inv[index]->dcVoltage = (inv[index]->dcVoltageA + inv[index]->dcVoltageB) / 2;
+
+
+        }
+        else if (selectSendMsgType == 4)
+        {
+            inv[index]->operatingStatus = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+
+        }
+
+        else if (selectSendMsgType == 5)
+        {
+            inv[index]->dcCurrentE = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
+            inv[index]->dcPowerE = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
+            inv[index]->dcCurrentF = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
+            inv[index]->dcPowerF = client->getBuf(29) * 0x1000000 + client->getBuf(30) * 0x10000 + client->getBuf(31) * 0x100 + client->getBuf(32);
+
+            inv[index]->dcCurrent = (inv[index]->dcCurrentA + inv[index]->dcCurrentB + inv[index]->dcCurrentC + inv[index]->dcCurrentD + inv[index]->dcCurrentE
+                                     + inv[index]->dcCurrentF);
+            inv[index]->dcVoltage = (inv[index]->dcVoltageA + inv[index]->dcVoltageB) / 2;
+            inv[index]->dcPower = (inv[index]->dcPowerA + inv[index]->dcPowerB + inv[index]->dcPowerC + inv[index]->dcPowerD + inv[index]->dcPowerE
+                                    + inv[index]->dcPowerF);
+
         }
     }
-    else if (selectSendMsgType == 3)
-    {
-
-        inv[index]->dcCurrentB = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
-        inv[index]->dcVoltageB = client->getBuf(13) * 0x1000000 + client->getBuf(14) * 0x10000 + client->getBuf(15) * 0x100 + client->getBuf(16);
-        inv[index]->dcPowerB = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
-
-        inv[index]->dcCurrentC = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
-        inv[index]->dcPowerC = client->getBuf(29) * 0x1000000 + client->getBuf(30) * 0x10000 + client->getBuf(31) * 0x100 + client->getBuf(32);
-        inv[index]->dcCurrentD = client->getBuf(33) * 0x1000000 + client->getBuf(34) * 0x10000 + client->getBuf(35) * 0x100 + client->getBuf(36);
-        inv[index]->dcPowerD = client->getBuf(41) * 0x1000000 + client->getBuf(42) * 0x10000 + client->getBuf(43) * 0x100 + client->getBuf(44);
-
-
-        inv[index]->dcVoltage = (inv[index]->dcVoltageA + inv[index]->dcVoltageB) / 2;
-
-
-    }
-    else if (selectSendMsgType == 4)
-    {
-        inv[index]->operatingStatus = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
-
-    }
-
-    else if (selectSendMsgType == 5)
-    {
-        inv[index]->dcCurrentE = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
-        inv[index]->dcPowerE = client->getBuf(17) * 0x1000000 + client->getBuf(18) * 0x10000 + client->getBuf(19) * 0x100 + client->getBuf(20);
-        inv[index]->dcCurrentF = client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24);
-        inv[index]->dcPowerF = client->getBuf(29) * 0x1000000 + client->getBuf(30) * 0x10000 + client->getBuf(31) * 0x100 + client->getBuf(32);
-
-        inv[index]->dcCurrent = (inv[index]->dcCurrentA + inv[index]->dcCurrentB + inv[index]->dcCurrentC + inv[index]->dcCurrentD + inv[index]->dcCurrentE
-                                 + inv[index]->dcCurrentF);
-        inv[index]->dcVoltage = (inv[index]->dcVoltageA + inv[index]->dcVoltageB) / 2;
-        inv[index]->dcPower = (inv[index]->dcPowerA + inv[index]->dcPowerB + inv[index]->dcPowerC + inv[index]->dcPowerD + inv[index]->dcPowerE
-                                + inv[index]->dcPowerF);
-
-    }
-
     client->TcpDisconnect();
 
     delete client;

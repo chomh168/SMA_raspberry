@@ -116,27 +116,7 @@ void MainWindow::on_pushButton_9_clicked()
     }
 }
 
-//용량 선택
-void MainWindow::on_comboBox_activated(const QString &arg1)
-{
-    if(arg1 == "25K")
-    {
-        QMessageBox::information(this,"info",arg1,"OK");
-        capacity=0;
-    }
-    else if (arg1 == "50K")
-    {
-        QMessageBox::information(this,"info",arg1,"OK");
-        capacity=1;
-    }
-    else if (arg1 == "1M")
-    {
-        QMessageBox::information(this,"info",arg1,"OK");
-        capacity=2;
-    }
 
-    setFileNum("capacity.txt",capacity);
-}
 
 //HW 리셋
 void MainWindow::hw_reset()
