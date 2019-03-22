@@ -125,8 +125,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->comboBox->addItem("25K");
     ui->comboBox->addItem("50K");
-    ui->comboBox->addItem("60K(test)");
     ui->comboBox->addItem("1M");
+    ui->comboBox->addItem("60K(test)");
 
 
     capacity = getFileNum("capacity.txt");
@@ -134,9 +134,20 @@ MainWindow::MainWindow(QWidget *parent) :
 
     toggle = getFileNum("mode.txt");
     if(toggle==true)
+    {
         ui->pushButton_9->setText("WCD");
+
+        if(invCount>10)
+            serTimer->setInterval(600000);
+        else
+            serTimer->setInterval(300000);
+    }
     else
+    {
+        serTimer->setInterval(600000);
         ui->pushButton_9->setText("LAN");
+    }
+
 
     connect(ui->actionHW_reset_2, SIGNAL(triggered()),this,SLOT(hw_reset()));
     connect(ui->actionSW_reset_2, SIGNAL(triggered()),this,SLOT(sw_reset()));
@@ -182,13 +193,11 @@ void MainWindow::invslot()
 bool MainWindow::SendMessage(QString ipAddress, int selectSendMsgType, int index)
 {
 
-    TcpClient *client = new TcpClient();
-    bool check=true;
+    //TcpClient *client = new TcpClient();
+    //bool check=true;
     //bool check = client->TcpConnect(ipAddress,502);
 
 
-    if(check==true)
-    {
         //25K STP
         if(capacity==STP25K)
         {
@@ -211,12 +220,10 @@ bool MainWindow::SendMessage(QString ipAddress, int selectSendMsgType, int index
         {
             return SendMessage60K(ipAddress,selectSendMsgType,index);
         }
-    }
-
-    delete client;
 
 
-    return check;
+
+    return true;
 }
 
 //용량 선택
@@ -271,13 +278,12 @@ void MainWindow::cheslot()
         black = true;
         if(toggle==true){
             SendWCDMA();
-            serTimer->setInterval(300000);
-            //QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
-            //send_watcher.setFuture(th5);
+            //serTimer->setInterval(300000);
+
         }
         else{
             SendServerHstec();
-            serTimer->setInterval(600000);
+            //serTimer->setInterval(600000);
         }
     }
 
@@ -286,8 +292,6 @@ void MainWindow::cheslot()
         black = false;
         if(toggle==true){
             SendWCDMA();
-            //QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
-            //send_watcher.setFuture(th5);
         }
         else{
             SendServerHstec();
@@ -304,10 +308,11 @@ void MainWindow::serslot()
 
     if(toggle==true)
     {
-        while(sms_watcher.isRunning()==true) QThread::sleep(20);
-
-        QFuture<void> th2 = QtConcurrent::run(MainWindow::SendWCDMA);
-        send_watcher.setFuture(th2);
+       if(sms_watcher.isRunning()==false)
+       {
+            QFuture<void> th2 = QtConcurrent::run(MainWindow::SendWCDMA);
+            send_watcher.setFuture(th2);
+       }
     }
     else
     {

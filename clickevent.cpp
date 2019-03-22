@@ -40,6 +40,18 @@ void MainWindow::on_pushButton_2_clicked()
 
     ui->tableView->setModel(model);
 
+    if(toggle==true)
+    {
+        if(invCount>10)
+            serTimer->setInterval(600000);
+        else
+            serTimer->setInterval(300000);
+    }
+    else
+    {
+        serTimer->setInterval(600000);
+    }
+
 }
 
 //시작 버튼
@@ -107,12 +119,19 @@ void MainWindow::on_pushButton_9_clicked()
         toggle=false;
         ui->pushButton_9->setText("LAN");
         setFileNum("mode.txt",toggle);
+
+        serTimer->setInterval(600000);
     }
     else
     {
         toggle=true;
         ui->pushButton_9->setText("WCD");
         setFileNum("mode.txt",toggle);
+
+        if(invCount>10)
+            serTimer->setInterval(600000);
+        else
+            serTimer->setInterval(300000);
     }
 }
 

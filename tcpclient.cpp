@@ -10,7 +10,7 @@ TcpClient::TcpClient(QObject *parent) : QObject (parent)
 
 TcpClient::~TcpClient()
 {
-
+    delete m_socket;
 }
 
 
@@ -116,7 +116,7 @@ void TcpClient::setFileLog(QString log)
         qDebug() << "Error: File Not open";
     }
 
-    QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+    QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"); //lan 기준 , WCDMA는 시간이 달라 질수 있음
     file->write(time.toUtf8()+" " + log.toUtf8() + "\r\n"); //파일에 텍스트를 작성
     file->close();
 

@@ -17,7 +17,7 @@ void MainWindow::inv60K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            QtConcurrent::run(MainWindow::SendMessage60K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
     }
@@ -25,7 +25,7 @@ void MainWindow::inv60K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            QtConcurrent::run(MainWindow::SendMessage60K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
     }
@@ -33,7 +33,7 @@ void MainWindow::inv60K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            QtConcurrent::run(MainWindow::SendMessage,invIP[i],selectSendMsgType,i);
+            QtConcurrent::run(MainWindow::SendMessage60K,invIP[i],selectSendMsgType,i);
 
             QStandardItem *Item = new QStandardItem(QString::number(inv[i]->totalYeild));
             model->setItem(i,9,Item);
