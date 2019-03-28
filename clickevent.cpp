@@ -140,7 +140,9 @@ void MainWindow::on_pushButton_9_clicked()
 //HW 리셋
 void MainWindow::hw_reset()
 {
-    digitalWrite(0,1);
+    digitalWrite(0,(1)); //외부 버튼을 이용한 리셋 기능
+    QThread::sleep(1);
+    digitalWrite(0,(0));
 }
 
 //SW 리셋

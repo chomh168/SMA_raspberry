@@ -24,126 +24,6 @@ extern bool count_error;
 
 extern int check_count;
 
-//문자 리셋  부분
-/*
-void MainWindow::SMSReceive()
-{
-    char CMGR[12] = {0x41, 0x54 , 0x2B , 0x43 , 0x4D , 0x47 , 0x52 , 0x3D , 0x30 , 0x0D};
-    char CNUM[10] = {0x41, 0x54 , 0x24 , 0x24 , 0x43 , 0x4e , 0x55 , 0x4d , 0x0d};
-    char CMGD[12] = {0x41, 0x54, 0x2B, 0x43, 0x4D, 0x47, 0x44, 0x3D, 0x30, 0x0D};
-    char SMSW[60] = {0x41, 0x54 , 0x24 , 0x24, 0x53 , 0x4D , 0x53 , 0x57 , 0x3D , 0x22 , 0x30 , 0x31 , 0x30 , 0x35 , 0x35 , 0x37 , 0x37 , 0x37 , 0x36 , 0x32 , 0x37 , 0x22 , 0x2C , 0x22 , 0x30 , 0x31 , 0x32 , 0x32 , 0x39 , 0x31 , 0x38 , 0x36 , 0x36 , 0x32 , 0x32 , 0x22 , 0x2C , 0x30 , 0x2C , 0x30 , 0x2C , 0x30 , 0x2C , 0x31 , 0x33 , 0x32 , 0x0D};
-    char MSG[6] = {0x4F, 0x4B, 0x1A, 0x0D};
-    //char CMGF[10] = {0x41, 0x54 , 0x2b , 0x43 , 0x4d , 0x47 , 0x46 , 0x3d , 0x31 , 0x0d};
-    char CSMP[16] = {0x41, 0x54, 0x2B, 0x43, 0x53, 0x4D, 0x50, 0x3D, 0x31, 0x2C, 0x2C, 0x30, 0x2C, 0x30, 0x0d};
-
-    char rxbuffer[1024] = {0,};
-    int fd;
-    int count=0;
-    char buf;
-
-    bool reboot=false;
-
-    if((fd=serialOpen("/dev/serial0",115200))<0)
-    {
-       qDebug()<<"err:not Open";
-    }
-
-        serialPuts(fd,CSMP); // CNUM
-
-        QThread::sleep(2);
-        serialFlush(fd);
-
-
-        serialPuts(fd,CNUM); // CNUM
-
-        QThread::sleep(2);
-
-        while(serialDataAvail(fd)!=NULL)
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-            buf = serialGetchar(fd);
-            rxbuffer[count]=buf;
-            count++;
-        }
-
-        serialFlush(fd);
-        QString str = QString(rxbuffer);
-
-        //initialization
-        memset((void*)&rxbuffer, 0, sizeof(rxbuffer));
-        count = 0;
-
-        qDebug()<<"after CNUM : "<<str;
-
-        if(str.indexOf("8212")>0)
-        {
-            for(int i = 0;i<8;i++)
-            {
-                SMSW[27+i] = str.at(str.indexOf("8212")+4+i).toLatin1();
-            }
-        }
-
-
-        serialPuts(fd,CMGR); // CMGR
-
-        qDebug()<<SMSW;
-
-        QThread::sleep(2);
-
-        while(serialDataAvail(fd)!=NULL)
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-            buf = serialGetchar(fd);
-            rxbuffer[count]=buf;
-            count++;
-        }
-
-        serialFlush(fd);
-
-        QString feed = QString(rxbuffer);
-            qDebug()<<"read : "<<feed;
-
-        if(feed.indexOf("010")>0)
-        {
-            for(int i =0;i<11;i++)
-            {
-                SMSW[10+i] = feed.at(feed.indexOf("010")+i).toLatin1();
-            }
-
-            if(feed.indexOf("5339383230")>0)  //received MESSAGE
-            {
-                serialPuts(fd,SMSW);
-
-                QThread::sleep(2);
-                while(serialDataAvail(fd)!=NULL)
-                {
-                    system("sudo chmod 777 /dev/ttyAMA0");
-                    buf = serialGetchar(fd);
-                    rxbuffer[count]=buf;
-                    count++;
-                }
-                serialFlush(fd);
-                qDebug()<<rxbuffer;
-
-                serialPuts(fd,MSG);
-
-                //reboot=true;
-            }
-
-            QThread::sleep(1);
-
-            serialPuts(fd,CMGD);
-        }
-
-    QThread::sleep(1);
-
-    serialFlush(fd);
-    serialClose(fd);
-
-    if(reboot==true)
-        system("reboot");
-}
-*/
 
 //WCDMA를 통한 전송
 void MainWindow::SendWCDMA()
@@ -350,7 +230,7 @@ QString MainWindow::uart_ch(char *ch, int state)
     else if(state == 3 || state == 4)
     {
         QThread::sleep(5);
-            while(serialDataAvail(fd)!=NULL)
+        while(serialDataAvail(fd)!=NULL)
             {
                 system("sudo chmod 777 /dev/ttyAMA0");
                 buf = serialGetchar(fd);
@@ -683,8 +563,14 @@ void MainWindow::send_ok()
             ui->textBrowser->append("WCDMA send error");
             check_count++;
 
-            if(check_count==6)
-                digitalWrite(0,1);
+            if(check_count==4)
+            {
+                digitalWrite(0,(1)); //외부 버튼을 이용한 리셋 기능
+                QThread::sleep(1);
+                digitalWrite(0,(0));
+                check_count=0;
+            }
+
         }
     }
 
@@ -724,3 +610,126 @@ QString MainWindow::req_csq()
 
     return str;
 }
+
+
+
+//문자 리셋  부분
+/*
+void MainWindow::SMSReceive()
+{
+    char CMGR[12] = {0x41, 0x54 , 0x2B , 0x43 , 0x4D , 0x47 , 0x52 , 0x3D , 0x30 , 0x0D};
+    char CNUM[10] = {0x41, 0x54 , 0x24 , 0x24 , 0x43 , 0x4e , 0x55 , 0x4d , 0x0d};
+    char CMGD[12] = {0x41, 0x54, 0x2B, 0x43, 0x4D, 0x47, 0x44, 0x3D, 0x30, 0x0D};
+    char SMSW[60] = {0x41, 0x54 , 0x24 , 0x24, 0x53 , 0x4D , 0x53 , 0x57 , 0x3D , 0x22 , 0x30 , 0x31 , 0x30 , 0x35 , 0x35 , 0x37 , 0x37 , 0x37 , 0x36 , 0x32 , 0x37 , 0x22 , 0x2C , 0x22 , 0x30 , 0x31 , 0x32 , 0x32 , 0x39 , 0x31 , 0x38 , 0x36 , 0x36 , 0x32 , 0x32 , 0x22 , 0x2C , 0x30 , 0x2C , 0x30 , 0x2C , 0x30 , 0x2C , 0x31 , 0x33 , 0x32 , 0x0D};
+    char MSG[6] = {0x4F, 0x4B, 0x1A, 0x0D};
+    //char CMGF[10] = {0x41, 0x54 , 0x2b , 0x43 , 0x4d , 0x47 , 0x46 , 0x3d , 0x31 , 0x0d};
+    char CSMP[16] = {0x41, 0x54, 0x2B, 0x43, 0x53, 0x4D, 0x50, 0x3D, 0x31, 0x2C, 0x2C, 0x30, 0x2C, 0x30, 0x0d};
+
+    char rxbuffer[1024] = {0,};
+    int fd;
+    int count=0;
+    char buf;
+
+    bool reboot=false;
+
+    if((fd=serialOpen("/dev/serial0",115200))<0)
+    {
+       qDebug()<<"err:not Open";
+    }
+
+        serialPuts(fd,CSMP); // CNUM
+
+        QThread::sleep(2);
+        serialFlush(fd);
+
+
+        serialPuts(fd,CNUM); // CNUM
+
+        QThread::sleep(2);
+
+        while(serialDataAvail(fd)!=NULL)
+        {
+            system("sudo chmod 777 /dev/ttyAMA0");
+            buf = serialGetchar(fd);
+            rxbuffer[count]=buf;
+            count++;
+        }
+
+        serialFlush(fd);
+        QString str = QString(rxbuffer);
+
+        //initialization
+        memset((void*)&rxbuffer, 0, sizeof(rxbuffer));
+        count = 0;
+
+        qDebug()<<"after CNUM : "<<str;
+
+        if(str.indexOf("8212")>0)
+        {
+            for(int i = 0;i<8;i++)
+            {
+                SMSW[27+i] = str.at(str.indexOf("8212")+4+i).toLatin1();
+            }
+        }
+
+
+        serialPuts(fd,CMGR); // CMGR
+
+        qDebug()<<SMSW;
+
+        QThread::sleep(2);
+
+        while(serialDataAvail(fd)!=NULL)
+        {
+            system("sudo chmod 777 /dev/ttyAMA0");
+            buf = serialGetchar(fd);
+            rxbuffer[count]=buf;
+            count++;
+        }
+
+        serialFlush(fd);
+
+        QString feed = QString(rxbuffer);
+            qDebug()<<"read : "<<feed;
+
+        if(feed.indexOf("010")>0)
+        {
+            for(int i =0;i<11;i++)
+            {
+                SMSW[10+i] = feed.at(feed.indexOf("010")+i).toLatin1();
+            }
+
+            if(feed.indexOf("5339383230")>0)  //received MESSAGE
+            {
+                serialPuts(fd,SMSW);
+
+                QThread::sleep(2);
+                while(serialDataAvail(fd)!=NULL)
+                {
+                    system("sudo chmod 777 /dev/ttyAMA0");
+                    buf = serialGetchar(fd);
+                    rxbuffer[count]=buf;
+                    count++;
+                }
+                serialFlush(fd);
+                qDebug()<<rxbuffer;
+
+                serialPuts(fd,MSG);
+
+                //reboot=true;
+            }
+
+            QThread::sleep(1);
+
+            serialPuts(fd,CMGD);
+        }
+
+    QThread::sleep(1);
+
+    serialFlush(fd);
+    serialClose(fd);
+
+    if(reboot==true)
+        system("reboot");
+}
+*/

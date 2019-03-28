@@ -265,10 +265,11 @@ void MainWindow::cheslot()
     {
 
 
-        digitalWrite(0,(jj%2)); //외부 버튼을 이용한 리셋 기능
-        qDebug()<<"jj : "<<(jj%2);
 
-        jj++;
+        qDebug()<<"jj : "<<(1);
+        digitalWrite(0,(1)); //외부 버튼을 이용한 리셋 기능
+        QThread::sleep(1);
+        digitalWrite(0,(0));
 
     }
 
