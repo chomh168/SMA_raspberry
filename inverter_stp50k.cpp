@@ -17,7 +17,6 @@ void MainWindow::inv50K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //T5SEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
@@ -26,7 +25,6 @@ void MainWindow::inv50K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //T5SEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
@@ -35,10 +33,7 @@ void MainWindow::inv50K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-
-            //T5SEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
-
         }
         selectSendMsgType++;
     }
@@ -46,7 +41,6 @@ void MainWindow::inv50K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //T5SEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
 
             QStandardItem *Item = new QStandardItem(QString::number(inv[i]->totalYeild));
@@ -113,7 +107,6 @@ void MainWindow::inv50K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //T5SEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType=1;
@@ -145,7 +138,7 @@ bool MainWindow::SendMessage50K(QString ipAddress, int selectSendMsgType, int in
         if (selectSendMsgType == 1)
         {
             inv[index]->totalYeild = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
-            inv[index]->dailyYeild = (client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
+            inv[index]->dailyYeild = 0;//(client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
         }
         else if (selectSendMsgType == 2)
         {

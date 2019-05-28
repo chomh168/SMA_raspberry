@@ -15,7 +15,6 @@ void MainWindow::inv25K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //TSEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
@@ -24,7 +23,6 @@ void MainWindow::inv25K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //TSEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
@@ -33,10 +31,7 @@ void MainWindow::inv25K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-
-            //TSEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
-
         }
         selectSendMsgType++;
     }
@@ -44,7 +39,6 @@ void MainWindow::inv25K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //TSEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
 
             QStandardItem *Item = new QStandardItem(QString::number(inv[i]->totalYeild));
@@ -109,10 +103,7 @@ void MainWindow::inv25K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-
-            //TSEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
-
         }
         selectSendMsgType=1;
     }
@@ -161,7 +152,7 @@ bool MainWindow::SendMessage25K(QString ipAddress, int selectSendMsgType, int in
                     inv[index]->acCurrent2 = inv[index]->acCurrent;
                     inv[index]->acCurrent3 = inv[index]->acCurrent;
 
-                    if(inv[index]->acCurrent==2123) inv[index]->acCurrent = 0;
+                    if(inv[index]->acPower==2123) inv[index]->acPower = 0;
                     inv[index]->acFrequency = client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80) == 65535 ? 0 : client->getBuf(77) * 0x1000000 + client->getBuf(78) * 0x10000 + client->getBuf(79) * 0x100 + client->getBuf(80);
 
           }

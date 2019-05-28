@@ -6,7 +6,7 @@
 #include<QHostAddress>
 #include<QByteArray>
 #include<QDataStream>
-#include <QApplication>
+#include<QApplication>
 
 
 class TcpClient : public QObject
@@ -28,8 +28,6 @@ public:
     unsigned char getBuf(int index);
     void setFileLog(QString log);
 
-
-
 signals:
 
 public slots:
@@ -38,8 +36,6 @@ private:
     QString m_ipAddress;
     bool m_connectState;
     char buffer[256];
-
-
 };
 
 

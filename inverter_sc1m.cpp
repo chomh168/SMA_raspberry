@@ -16,7 +16,6 @@ void MainWindow::inv1M(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //C1SEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage1M,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
@@ -25,7 +24,6 @@ void MainWindow::inv1M(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //C1SEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage1M,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
@@ -34,7 +32,6 @@ void MainWindow::inv1M(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //C1SEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage1M,invIP[i],selectSendMsgType,i);
 
             QStandardItem *Item = new QStandardItem(QString::number(inv[i]->totalYeild));
@@ -51,7 +48,6 @@ void MainWindow::inv1M(){
             QString state="Null";
             if(inv[i]->operatingStatus == 0x135) state = "발전";
             else if(inv[i]->operatingStatus == 0x571) state = "정지";
-            //else if(inv[i]->operatingStatus == 0x5BB) state = "준비";
             else if(first==false)
             {
                state = "ERROR("+QString::number(inv[i]->operatingStatus)+")";
@@ -99,7 +95,6 @@ void MainWindow::inv1M(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            //C1SEND[selectSendMsgType-1][1] = (char) i;
             QtConcurrent::run(MainWindow::SendMessage1M,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType=1;

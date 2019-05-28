@@ -17,9 +17,6 @@
 #include <QStandardItemModel>
 #include <QDateTime>
 
-
-
-
 namespace Ui {
     class MainWindow;
 }

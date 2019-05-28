@@ -8,7 +8,7 @@ extern int plantNumber;
 extern int invCount;
 
 
-extern bool wcdma_error;
+extern bool wcdma_error; //wcdma 에러가 발생했는지(5번 발생시 flag down->count_error flag up)
 extern int wcdma_count;
 
 extern bool reboot;
@@ -16,11 +16,9 @@ extern int NCSQ;
 
 extern Inverter* inv[20];
 
-extern int error_count;
-extern bool send_error;
 
 extern bool black;
-extern bool count_error;
+extern bool count_error; //5번 연속시도 후 실패시 flag up
 
 extern int check_count;
 
@@ -56,10 +54,6 @@ void MainWindow::SendWCDMA()
 
     } else if(plantNumber<8000){
         //7778;
-        //TCPOPEN[28]=0x37;
-        //TCPOPEN[29]=0x38;
-        //TCPOPEN[30]=0x0D;
-        //TCPOPEN[31]=0x0A;
 
         TCPOPEN[23]=0x37;
         TCPOPEN[24]=0x38;
@@ -68,10 +62,6 @@ void MainWindow::SendWCDMA()
 
     } else if(plantNumber<8500){
         //7779;
-        //TCPOPEN[28]=0x37;
-        //TCPOPEN[29]=0x39;
-        //TCPOPEN[30]=0x0D;
-        //TCPOPEN[31]=0x0A;
 
         TCPOPEN[23]=0x37;
         TCPOPEN[24]=0x39;
@@ -80,10 +70,6 @@ void MainWindow::SendWCDMA()
 
     } else if(plantNumber<9000){
         //7780;
-        //TCPOPEN[28]=0x38;
-        //TCPOPEN[29]=0x30;
-        //TCPOPEN[30]=0x0D;
-        //TCPOPEN[31]=0x0A;
 
         TCPOPEN[23]=0x38;
         TCPOPEN[24]=0x30;
@@ -92,10 +78,6 @@ void MainWindow::SendWCDMA()
 
     } else if(plantNumber<9500){
         //7781;
-        //TCPOPEN[28]=0x38;
-        //TCPOPEN[29]=0x31;
-        //TCPOPEN[30]=0x0D;
-        //TCPOPEN[31]=0x0A;
 
         TCPOPEN[23]=0x38;
         TCPOPEN[24]=0x31;
@@ -140,8 +122,6 @@ void MainWindow::SendWCDMA()
             {
                 uart_ch(TCPOPEN,i);
                 qDebug()<<"OPEN2";
-
-
             }
             else if(i==5)
             {
@@ -203,7 +183,7 @@ QString MainWindow::uart_ch(char *ch, int state)
     if(state == 1)
     {
         QThread::sleep(1);
-        while(serialDataAvail(fd)!=NULL)
+        while(serialDataAvail(fd)!='\0')
         {
             system("sudo chmod 777 /dev/ttyAMA0");
             buf = serialGetchar(fd);
@@ -230,7 +210,7 @@ QString MainWindow::uart_ch(char *ch, int state)
     else if(state == 3 || state == 4)
     {
         QThread::sleep(5);
-        while(serialDataAvail(fd)!=NULL)
+        while(serialDataAvail(fd)!='\0')
             {
                 system("sudo chmod 777 /dev/ttyAMA0");
                 buf = serialGetchar(fd);
@@ -260,7 +240,7 @@ QString MainWindow::uart_ch(char *ch, int state)
     {
         QThread::sleep(2);
 
-        while(serialDataAvail(fd)!=NULL)
+        while(serialDataAvail(fd)!='\0')
         {
             system("sudo chmod 777 /dev/ttyAMA0");
             buf = serialGetchar(fd);
@@ -282,7 +262,7 @@ QString MainWindow::uart_ch(char *ch, int state)
     else if (state==6)
     {
         QThread::sleep(2);
-        while(serialDataAvail(fd)!=NULL)
+        while(serialDataAvail(fd)!='\0')
         {
             system("sudo chmod 777 /dev/ttyAMA0");
             buf = serialGetchar(fd);
@@ -502,11 +482,6 @@ void MainWindow::send_append(char *TCPWRITE)
             wcdma_count=0;
             wcdma_error=false;
             count_error=true;
-
-            error_count++;
-
-            if(error_count==5)
-                send_error=true;
         }
 
         wcdma_count++;
@@ -516,8 +491,6 @@ void MainWindow::send_append(char *TCPWRITE)
         wcdma_error=false;
         count_error=false;
         wcdma_count=0;
-
-        error_count=0;
     }
 
 }
@@ -544,7 +517,7 @@ void MainWindow::send_ok()
 
     if(wcdma_error==true)
     {
-        while(sms_watcher.isRunning()==true) QThread::sleep(20);
+        if(sms_watcher.isRunning()==true) QThread::sleep(20);//보통의 루틴 시간
 
         setFileLog("wcdma error");
         QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
@@ -579,8 +552,6 @@ void MainWindow::send_ok()
         setFileLog("reboot");
         system("reboot");
     }
-
-
 }
 
 

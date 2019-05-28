@@ -42,7 +42,7 @@ void MainWindow::on_pushButton_2_clicked()
 
     if(toggle==true)
     {
-        if(invCount>10)
+        if(invCount>=7)
             serTimer->setInterval(600000);
         else
             serTimer->setInterval(300000);
@@ -128,7 +128,7 @@ void MainWindow::on_pushButton_9_clicked()
         ui->pushButton_9->setText("WCD");
         setFileNum("mode.txt",toggle);
 
-        if(invCount>10)
+        if(invCount>=7)
             serTimer->setInterval(600000);
         else
             serTimer->setInterval(300000);

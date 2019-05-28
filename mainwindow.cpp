@@ -16,34 +16,22 @@ enum{
 
 Inverter* inv[20]; //= new Inverter[20];
 
-
-
 char sdata[70] = {0,};// = new char[70];    // 구서버 송신 버퍼
 char checksum = 0;              // 구서버 송신 체크섬
 
-
 int plantNumber=7777;
 int invCount=1;
+int wcdma_count=0;
+int NCSQ=0;
+int capacity = 0;
+int check_count=0;
 
 bool first=true;
 bool toggle=true;
-
 bool wcdma_error=false;
-int wcdma_count=0;
-
 bool reboot=false;
-int NCSQ=0;
-
-int capacity = 0;
-
-int error_count=0;
-bool send_error=false;
-
 bool black=false;
 bool count_error=false;
-
-int check_count=0;
-
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -137,7 +125,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         ui->pushButton_9->setText("WCD");
 
-        if(invCount>10)
+        if(invCount>=7)
             serTimer->setInterval(600000);
         else
             serTimer->setInterval(300000);
@@ -192,11 +180,6 @@ void MainWindow::invslot()
 //메세지를 담는 부분
 bool MainWindow::SendMessage(QString ipAddress, int selectSendMsgType, int index)
 {
-
-    //TcpClient *client = new TcpClient();
-    //bool check=true;
-    //bool check = client->TcpConnect(ipAddress,502);
-
 
         //25K STP
         if(capacity==STP25K)
@@ -263,14 +246,10 @@ void MainWindow::cheslot()
 
     if(digitalRead(1)==1)
     {
-
-
-
         qDebug()<<"jj : "<<(1);
         digitalWrite(0,(1)); //외부 버튼을 이용한 리셋 기능
         QThread::sleep(1);
         digitalWrite(0,(0));
-
     }
 
 
@@ -279,12 +258,9 @@ void MainWindow::cheslot()
         black = true;
         if(toggle==true){
             SendWCDMA();
-            //serTimer->setInterval(300000);
-
         }
         else{
             SendServerHstec();
-            //serTimer->setInterval(600000);
         }
     }
 
@@ -329,18 +305,7 @@ void MainWindow::strslot()
     serTimer->start();
     cheTimer->start();
 
-
     strTimer->stop();
     ui->textBrowser->clear();
 }
-
-
-
-
-
-
-
-
-
-
 
