@@ -1,3 +1,4 @@
+
 #include "mainwindow.h"
 #include "data.h"
 #include "ui_mainwindow.h"
@@ -8,8 +9,8 @@ extern int plantNumber;
 extern int invCount;
 
 
-bool wcdma_error; //wcdma 에러가 발생했는지(5번 발생시 flag down->count_error flag up)
-int wcdma_count;
+bool lte_error; //wcdma 에러가 발생했는지(5번 발생시 flag down->count_error flag up)
+int lte_count;
 
 extern bool reboot;
 extern int NCSQ;
@@ -18,74 +19,65 @@ extern Inverter* inv[20];
 
 
 extern bool black;
-
-bool count_error; //5번 연속시도 후 실패시 flag up
-int check_count;
+bool lcount_error; //5번 연속시도 후 실패시 flag up
+int lcheck_count;
 
 
 //WCDMA를 통한 전송
-void MainWindow::SendWCDMA()
-{   
+void MainWindow::SendLTE()
+{
 
     char ATE[7] = {0x41, 0x54, 0x45, 0x30, 0x0D, 0x0A};
     char CSQ[8] = {0x41, 0x54, 0x2B, 0x43, 0x53, 0x51, 0x0D};
-    char TCPTYPE[16] = {0x41, 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x54 , 0x59 , 0x50 , 0x45 , 0x3D , 0x32 , 0x0D , 0x0A};
-    char PPPOPEN[13] = {0x41 , 0x54 , 0x24 , 0x24 , 0x50 , 0x50 , 0x50 , 0x4F , 0x50 , 0x45 , 0x4E , 0x0D, 0x0A};
-    //char TCPOPEN[50] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x4F , 0x50 , 0x45 , 0x4E , 0x3D  , 0x31 , 0x32 , 0x31 , 0x2E , 0x31 , 0x35 , 0x39 , 0x2E , 0x33 , 0x30 , 0x2E , 0x31, 0x35 , 0x2C , 0x37 , 0x37}; //, 0x37 , 0x37 , 0x37 , 0x38 , 0x0D , 0x0A};
-
-    char TCPOPEN[50] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x4F , 0x50 , 0x45 , 0x4E , 0x3D  , 0x68 , 0x73 , 0x74 , 0x65 , 0x63 , 0x2E , 0x6B , 0x72 , 0x2C , 0x37 , 0x37}; //, 0x37 , 0x37 , 0x37 , 0x38 , 0x0D , 0x0A};
 
 
-    char TCPWRITE[256] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x57 , 0x52 , 0x49 , 0x54 , 0x45 , 0x3D};//, 0xFF, 0xFF};
+    char STAT[11]={0x41, 0x54, 0x24, 0x24, 0x53, 0x54, 0x41, 0x54, 0x3F, 0x0D, 0x0A};
+    char RNDISDATA[16]={0x41, 0x54, 0x2A, 0x52, 0x4E, 0x44, 0x49, 0x53, 0x44, 0x41, 0x54, 0x41, 0x3D, 0x31, 0x0D, 0x0A};
+    //13:mode 1-on,0-off
+    char WSOCR[30]={0x41, 0x54, 0x2B, 0x57, 0x53, 0x4F, 0x43, 0x52, 0x3D, 0x30, 0x2C, 0x68, 0x73, 0x74, 0x65, 0x63, 0x2E, 0x6B, 0x72, 0x2C, 0x37, 0x37, 0x37, 0x37, 0x2C, 0x31, 0x2C, 0x31, 0x0D, 0x0A};
+    //20~23:port
 
-    char TCPREAD[15] = {0x41, 0x54, 0x24, 0x24, 0x54, 0x43, 0x50, 0x52, 0x45, 0x41, 0x44, 0x0d, 0x0a};
+    char WSOCO[12]={0x41, 0x54, 0x2B, 0x57, 0x53, 0x4F, 0x43, 0x4F, 0x3D, 0x30, 0x0D};
+    char WSOWR[256]={0x41, 0x54, 0x2B, 0x57, 0x53, 0x4F, 0x57, 0x52, 0x3D, 0x30, 0x2C, 0x36, 0x38, 0x2C};
 
-    char TCPCLOSE[15] = {0x41 , 0x54 , 0x24 , 0x24 , 0x54 , 0x43 , 0x50 , 0x43 , 0x4C , 0x4F , 0x53 , 0x45 , 0x0D};
-    char PPPCLOSE[15] = {0x41 , 0x54 , 0x24 , 0x24 , 0x50 , 0x50 , 0x50 , 0x43 , 0x4C , 0x4F , 0x53 , 0x45 , 0x0D};
-
+    char WSOCL[12]={0x41, 0x54, 0x2B, 0x57, 0x53, 0x4F, 0x43, 0x4C, 0x3D, 0x30, 0x0D};
 
 
     if(plantNumber<7500){
         //7777;
-        TCPOPEN[23]=0x37;
-        TCPOPEN[24]=0x37;
-        TCPOPEN[25]=0x0D;
-        TCPOPEN[26]=0x0A;
+        WSOCR[22]=0x37;
+        WSOCR[23]=0x37;
 
     } else if(plantNumber<8000){
         //7778;
 
-        TCPOPEN[23]=0x37;
-        TCPOPEN[24]=0x38;
-        TCPOPEN[25]=0x0D;
-        TCPOPEN[26]=0x0A;
+        WSOCR[22]=0x37;
+        WSOCR[23]=0x38;
+
 
     } else if(plantNumber<8500){
         //7779;
 
-        TCPOPEN[23]=0x37;
-        TCPOPEN[24]=0x39;
-        TCPOPEN[25]=0x0D;
-        TCPOPEN[26]=0x0A;
+        WSOCR[22]=0x37;
+        WSOCR[23]=0x39;
+
 
     } else if(plantNumber<9000){
         //7780;
 
-        TCPOPEN[23]=0x38;
-        TCPOPEN[24]=0x30;
-        TCPOPEN[25]=0x0D;
-        TCPOPEN[26]=0x0A;
+        WSOCR[22]=0x38;
+        WSOCR[23]=0x30;
+
 
     } else if(plantNumber<9500){
         //7781;
 
-        TCPOPEN[23]=0x38;
-        TCPOPEN[24]=0x31;
-        TCPOPEN[25]=0x0D;
-        TCPOPEN[26]=0x0A;
+        WSOCR[22]=0x38;
+        WSOCR[23]=0x31;
+
     }
 
-    qDebug()<<"tcpopen : "<<TCPOPEN;
+    qDebug()<<"tcpopen : "<<WSOCR;
 
 
     if(wiringPiSetup() == -1)
@@ -100,62 +92,51 @@ void MainWindow::SendWCDMA()
 
             if(i==0)
             {
-                uart_ch(ATE,i);
+                ;uart_ch(ATE,i);
                 qDebug()<<"ATE";
             }
             else if(i==1)
             {
-                uart_ch(CSQ,i);
+                luart_ch(CSQ,i);
                 qDebug()<<"CSQ";
             }
             else if(i==2)
             {
-                uart_ch(TCPTYPE,i);
-                qDebug()<<"TYPE";
+                luart_ch(STAT,i);
+                qDebug()<<"STAT";
             }
             else if(i==3)
             {
-                uart_ch(PPPOPEN,i);
-                qDebug()<<"OPEN";
+                RNDISDATA[13]=0x31;
+                luart_ch(RNDISDATA,i);
+                qDebug()<<"RNDISDATA OPEN";
             }
             else if(i==4)
             {
-                uart_ch(TCPOPEN,i);
-                qDebug()<<"OPEN2";
+                luart_ch(WSOCR,i);
+                qDebug()<<"WSOCR";
             }
             else if(i==5)
-            {
-                send_append(TCPWRITE);
-                qDebug()<<"tcpwrite : "<<TCPWRITE;
+            {//WSOCO
+                luart_ch(WSOCO,i);
+                qDebug()<<"WSOCO";
             }
-
-            //read??
             else if(i==6)
             {
-                QString rec = uart_ch(TCPREAD,i);
-                qDebug()<<"READ";
-
-                if(rec.indexOf("OK")!=-1)
-                {
-
-                    if(rec.indexOf("5552FFFF")>0)
-                    {
-                        qDebug()<<"FFFF";
-                        reboot=true;
-                    }
-                }
-
+                lsend_append(WSOWR);
+                qDebug()<<"WSOWR : "<<WSOWR;
             }
 
             else if(i==7)
             {
-                uart_ch(TCPCLOSE,i);
-                qDebug()<<"CLOSE";
+                luart_ch(WSOCL,i);
+                qDebug()<<"WSOCL";
             }
             else if(i==8)
             {
-                uart_ch(PPPCLOSE,i);
-                qDebug()<<"CLOSE2";
+                RNDISDATA[13]=0x30;
+                luart_ch(RNDISDATA,i);
+                qDebug()<<"RNDISDATA OFF";
 
             }
         }
@@ -163,7 +144,7 @@ void MainWindow::SendWCDMA()
 }
 
 //유아트 전송
-QString MainWindow::uart_ch(char *ch, int state)
+QString MainWindow::luart_ch(char *ch, int state)
 {
     char rxbuffer[1024] = {0,};
     int fd;
@@ -207,9 +188,9 @@ QString MainWindow::uart_ch(char *ch, int state)
         return lcsq;
     }
 
-    else if(state == 3 || state == 4)
+    else if(state == 3 || state == 4 || state == 5)
     {
-        QThread::sleep(5);
+        QThread::sleep(1);
         while(serialDataAvail(fd)!='\0')
             {
                 system("sudo chmod 777 /dev/ttyAMA0");
@@ -224,8 +205,8 @@ QString MainWindow::uart_ch(char *ch, int state)
 
             if(feed.indexOf("ERROR")!=-1) //에러 미발생
             {
-                wcdma_error=true;
-                count_error=false;
+                lte_error=true;
+                lcount_error=false;
             }
 
         serialFlush(fd);
@@ -236,7 +217,7 @@ QString MainWindow::uart_ch(char *ch, int state)
 
 
 
-    else if(state == 5)
+    else if(state == 6)
     {
         QThread::sleep(2);
 
@@ -250,7 +231,8 @@ QString MainWindow::uart_ch(char *ch, int state)
 
         QString feed = QString(rxbuffer);
 
-        qDebug()<<"debug : "<<rxbuffer;
+
+        qDebug()<<"content : "<<feed;
 
 
         serialFlush(fd);
@@ -259,26 +241,14 @@ QString MainWindow::uart_ch(char *ch, int state)
         return feed;
     }
 
-    else if (state==6)
+    else if (state==7||state==8)
     {
-        QThread::sleep(2);
-        while(serialDataAvail(fd)!='\0')
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-            buf = serialGetchar(fd);
-            rxbuffer[count]=buf;
-            count++;
-        }
-
-        QString feed = QString(rxbuffer);
-
-        qDebug()<<"length : "<<feed.length();
-        qDebug()<<"content : "<<feed;
+        QThread::sleep(1);
 
         serialFlush(fd);
         serialClose(fd);
 
-        return feed;
+        return 0;
     }
 
     else
@@ -294,7 +264,7 @@ QString MainWindow::uart_ch(char *ch, int state)
 }
 
 //서버 전송
-void MainWindow::send_append(char *TCPWRITE)
+void MainWindow::lsend_append(char *WSOWR)
 {
     char buffer[140]={0,};
     char ccs;
@@ -455,80 +425,85 @@ void MainWindow::send_append(char *TCPWRITE)
             0xaa  //120
             );
 
-        for(int i = 13 ; i<136+13;i++)
+        for(int i = 14 ; i<136+14;i++)
         {
-            TCPWRITE[i] = buffer[i-13];
+            WSOWR[i] = buffer[i-14];
         }
 
-        TCPWRITE[149] = 0x0d;
-        TCPWRITE[150] = 0x0a;
+        WSOWR[150] = 0x0d;
+        WSOWR[151] = 0x0a;
 
-        QString feed = uart_ch(TCPWRITE,5);
+        QString feed = uart_ch(WSOWR,6);
 
         if(feed.indexOf("OK") == -1)
         {
+            if(feed.indexOf("5552FFFF")>0)
+            {
+                qDebug()<<"FFFF";
+                reboot=true;
+            }
+
             error_flag |= true;
-            break;
+            break; 
         }
 
     }
 
     if(error_flag == true)
     {
-        wcdma_error=true;
+        lte_error=true;
 
-        if(wcdma_count==5)
+        if(lte_count==5)
         {
-            wcdma_count=0;
-            wcdma_error=false;
-            count_error=true;
+            lte_count=0;
+            lte_error=false;
+            lcount_error=true;
         }
 
-        wcdma_count++;
+        lte_count++;
     }
     else
     {
-        wcdma_error=false;
-        count_error=false;
-        wcdma_count=0;
+        lte_error=false;
+        lcount_error=false;
+        lte_count=0;
     }
 
 }
 
 
 
-//wcdma 전송 확인
-void MainWindow::send_ok()
+void MainWindow::lsend_ok()
 {
     ui->label_5->setText("CSQ : "+QString::number(NCSQ));
 
-    if(wcdma_error==true)
+    if(lte_error==true)
     {
         if(sms_watcher.isRunning()==true) QThread::sleep(20);//보통의 루틴 시간
 
-        setFileLog("wcdma error");
-        QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
-        send_watcher.setFuture(th5);
+        setFileLog("lte error");
+        QFuture<void> th5 = QtConcurrent::run(MainWindow::SendLTE);
+        lsend_watcher.setFuture(th5);
     }
     else
     {
         ui->textBrowser->clear();
-        if(count_error==false){
-            ui->textBrowser->append("WCDMA send ok!!");
+        if(lcount_error==false){
+            ui->textBrowser->append("LTE send ok!!");
             digitalWrite(0,0);
 
-            check_count=0;
+            lcheck_count=0;
         }
         else {
-            ui->textBrowser->append("WCDMA send error");
-            check_count++;
+            ui->textBrowser->append("LTE send error");
+            lcheck_count++;
 
-            if(check_count==4)
+            if(lcheck_count==4)
             {
                 digitalWrite(0,(1)); //외부 버튼을 이용한 리셋 기능
                 QThread::sleep(1);
                 digitalWrite(0,(0));
-                check_count=0;
+                lcheck_count=0;
             }
 
         }
@@ -540,127 +515,3 @@ void MainWindow::send_ok()
         system("reboot");
     }
 }
-
-
-
-
-//문자 리셋  부분
-/*
-void MainWindow::SMSReceive()
-{
-    char CMGR[12] = {0x41, 0x54 , 0x2B , 0x43 , 0x4D , 0x47 , 0x52 , 0x3D , 0x30 , 0x0D};
-    char CNUM[10] = {0x41, 0x54 , 0x24 , 0x24 , 0x43 , 0x4e , 0x55 , 0x4d , 0x0d};
-    char CMGD[12] = {0x41, 0x54, 0x2B, 0x43, 0x4D, 0x47, 0x44, 0x3D, 0x30, 0x0D};
-    char SMSW[60] = {0x41, 0x54 , 0x24 , 0x24, 0x53 , 0x4D , 0x53 , 0x57 , 0x3D , 0x22 , 0x30 , 0x31 , 0x30 , 0x35 , 0x35 , 0x37 , 0x37 , 0x37 , 0x36 , 0x32 , 0x37 , 0x22 , 0x2C , 0x22 , 0x30 , 0x31 , 0x32 , 0x32 , 0x39 , 0x31 , 0x38 , 0x36 , 0x36 , 0x32 , 0x32 , 0x22 , 0x2C , 0x30 , 0x2C , 0x30 , 0x2C , 0x30 , 0x2C , 0x31 , 0x33 , 0x32 , 0x0D};
-    char MSG[6] = {0x4F, 0x4B, 0x1A, 0x0D};
-    //char CMGF[10] = {0x41, 0x54 , 0x2b , 0x43 , 0x4d , 0x47 , 0x46 , 0x3d , 0x31 , 0x0d};
-    char CSMP[16] = {0x41, 0x54, 0x2B, 0x43, 0x53, 0x4D, 0x50, 0x3D, 0x31, 0x2C, 0x2C, 0x30, 0x2C, 0x30, 0x0d};
-
-    char rxbuffer[1024] = {0,};
-    int fd;
-    int count=0;
-    char buf;
-
-    bool reboot=false;
-
-    if((fd=serialOpen("/dev/serial0",115200))<0)
-    {
-       qDebug()<<"err:not Open";
-    }
-
-        serialPuts(fd,CSMP); // CNUM
-
-        QThread::sleep(2);
-        serialFlush(fd);
-
-
-        serialPuts(fd,CNUM); // CNUM
-
-        QThread::sleep(2);
-
-        while(serialDataAvail(fd)!=NULL)
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-            buf = serialGetchar(fd);
-            rxbuffer[count]=buf;
-            count++;
-        }
-
-        serialFlush(fd);
-        QString str = QString(rxbuffer);
-
-        //initialization
-        memset((void*)&rxbuffer, 0, sizeof(rxbuffer));
-        count = 0;
-
-        qDebug()<<"after CNUM : "<<str;
-
-        if(str.indexOf("8212")>0)
-        {
-            for(int i = 0;i<8;i++)
-            {
-                SMSW[27+i] = str.at(str.indexOf("8212")+4+i).toLatin1();
-            }
-        }
-
-
-        serialPuts(fd,CMGR); // CMGR
-
-        qDebug()<<SMSW;
-
-        QThread::sleep(2);
-
-        while(serialDataAvail(fd)!=NULL)
-        {
-            system("sudo chmod 777 /dev/ttyAMA0");
-            buf = serialGetchar(fd);
-            rxbuffer[count]=buf;
-            count++;
-        }
-
-        serialFlush(fd);
-
-        QString feed = QString(rxbuffer);
-            qDebug()<<"read : "<<feed;
-
-        if(feed.indexOf("010")>0)
-        {
-            for(int i =0;i<11;i++)
-            {
-                SMSW[10+i] = feed.at(feed.indexOf("010")+i).toLatin1();
-            }
-
-            if(feed.indexOf("5339383230")>0)  //received MESSAGE
-            {
-                serialPuts(fd,SMSW);
-
-                QThread::sleep(2);
-                while(serialDataAvail(fd)!=NULL)
-                {
-                    system("sudo chmod 777 /dev/ttyAMA0");
-                    buf = serialGetchar(fd);
-                    rxbuffer[count]=buf;
-                    count++;
-                }
-                serialFlush(fd);
-                qDebug()<<rxbuffer;
-
-                serialPuts(fd,MSG);
-
-                //reboot=true;
-            }
-
-            QThread::sleep(1);
-
-            serialPuts(fd,CMGD);
-        }
-
-    QThread::sleep(1);
-
-    serialFlush(fd);
-    serialClose(fd);
-
-    if(reboot==true)
-        system("reboot");
-}
-*/

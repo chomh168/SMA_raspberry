@@ -82,6 +82,10 @@ struct Inverter
        }
 };
 
-
+enum{
+    WCDMA=0,
+    LAN,
+    LTE
+};
 
 #endif // DATAH_H

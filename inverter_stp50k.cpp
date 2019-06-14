@@ -6,7 +6,7 @@
 extern int selectSendMsgType;
 extern int invCount;
 extern bool first;
-extern bool toggle;
+extern int mode;
 
 extern Inverter* inv[20];
 
@@ -89,12 +89,16 @@ void MainWindow::inv50K(){
             ui->textBrowser->clear();
             ui->textBrowser->append("전송중..");
 
-            if(toggle==true){
+            if(mode==WCDMA){
                 QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
                 send_watcher.setFuture(th5);
             }
-            else{
+            else if(mode==LAN){
                 SendServerHstec();
+            }
+            else{
+                QFuture<void> th5 = QtConcurrent::run(MainWindow::SendLTE);
+                lsend_watcher.setFuture(th5);
             }
 
             first=false;

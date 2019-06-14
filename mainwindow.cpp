@@ -14,6 +14,8 @@ enum{
 };
 
 
+
+
 Inverter* inv[20]; //= new Inverter[20];
 
 char sdata[70] = {0,};// = new char[70];    // 구서버 송신 버퍼
@@ -21,17 +23,16 @@ char checksum = 0;              // 구서버 송신 체크섬
 
 int plantNumber=7777;
 int invCount=1;
-int wcdma_count=0;
+
 int NCSQ=0;
 int capacity = 0;
-int check_count=0;
 
 bool first=true;
-bool toggle=true;
-bool wcdma_error=false;
+int mode=0;
+
 bool reboot=false;
 bool black=false;
-bool count_error=false;
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -80,6 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(&watcher, SIGNAL(finished()), this, SLOT(csq_ok()));
     connect(&send_watcher, SIGNAL(finished()), this, SLOT(send_ok()));
+    connect(&lsend_watcher, SIGNAL(finished()), this, SLOT(lsend_ok()));
 
     //테이블 설정
     model = new QStandardItemModel(invCount,11,this); //
@@ -120,8 +122,9 @@ MainWindow::MainWindow(QWidget *parent) :
     capacity = getFileNum("capacity.txt");
     ui->comboBox->setCurrentIndex(capacity);
 
-    toggle = getFileNum("mode.txt");
-    if(toggle==true)
+    mode = getFileNum("mode.txt");
+
+    if(mode==WCDMA)
     {
         ui->pushButton_9->setText("WCD");
 
@@ -130,10 +133,20 @@ MainWindow::MainWindow(QWidget *parent) :
         else
             serTimer->setInterval(300000);
     }
-    else
+    else if(mode==LAN)
     {
         serTimer->setInterval(600000);
         ui->pushButton_9->setText("LAN");
+
+    }
+    else if(mode==LTE)
+    {
+        ui->pushButton_9->setText("LTE");
+
+        if(invCount>=7)
+            serTimer->setInterval(600000);
+        else
+            serTimer->setInterval(300000);
     }
 
 
@@ -256,22 +269,28 @@ void MainWindow::cheslot()
     if(digitalRead(7)==1 && black == false)
     {
         black = true;
-        if(toggle==true){
+        if(mode==WCDMA){
             SendWCDMA();
         }
-        else{
+        else if(mode==LAN){
             SendServerHstec();
+        }
+        else{
+            SendLTE();
         }
     }
 
     else if (digitalRead(7)==0 && black == true)
     {
         black = false;
-        if(toggle==true){
+        if(mode==WCDMA){
             SendWCDMA();
         }
-        else{
+        else if(mode==LAN){
             SendServerHstec();
+        }
+        else{
+            SendLTE();
         }
     }
 
@@ -283,7 +302,7 @@ void MainWindow::serslot()
     ui->textBrowser->clear();
     ui->textBrowser->append("전송중..");
 
-    if(toggle==true)
+    if(mode==WCDMA)
     {
        if(sms_watcher.isRunning()==false)
        {
@@ -291,9 +310,17 @@ void MainWindow::serslot()
             send_watcher.setFuture(th2);
        }
     }
-    else
+    else if(mode==LAN)
     {
         SendServerHstec();
+    }
+    else
+    {
+        if(sms_watcher.isRunning()==false)
+        {
+             QFuture<void> th2 = QtConcurrent::run(MainWindow::SendLTE);
+             lsend_watcher.setFuture(th2);
+        }
     }
 
 }

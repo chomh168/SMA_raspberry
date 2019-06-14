@@ -63,10 +63,16 @@ public:
 
     static void SMSReceive();
 
+    static void SendLTE();
+    static QString luart_ch(char *ch,int state);
+    static void lsend_append(char *TCPWRITE);
+
+
     QStandardItemModel *model;
 
     QFutureWatcher<QString> watcher;
     QFutureWatcher<void> send_watcher;
+    QFutureWatcher<void> lsend_watcher;
     QFutureWatcher<void> sms_watcher;
 
 
@@ -93,6 +99,7 @@ public slots:
     void strslot();
     void csq_ok();
     void send_ok();
+    void lsend_ok();
     void hw_reset();
     void sw_reset();
 

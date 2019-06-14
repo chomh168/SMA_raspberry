@@ -6,7 +6,7 @@ extern int plantNumber;
 extern int invCount;
 
 extern int capacity;
-extern bool toggle;
+extern int mode;
 
 //클릭 이벤트(port)
 void MainWindow::on_pushButton_clicked()
@@ -40,16 +40,23 @@ void MainWindow::on_pushButton_2_clicked()
 
     ui->tableView->setModel(model);
 
-    if(toggle==true)
+    if(mode==WCDMA)
     {
         if(invCount>=7)
             serTimer->setInterval(600000);
         else
             serTimer->setInterval(300000);
     }
-    else
+    else if(mode==LAN)
     {
         serTimer->setInterval(600000);
+    }
+    else if(mode==LTE)
+    {
+        if(invCount>=7)
+            serTimer->setInterval(600000);
+        else
+            serTimer->setInterval(300000);
     }
 
 }
@@ -85,10 +92,33 @@ void MainWindow::on_pushButton_5_clicked()
 //서버 전송
 void MainWindow::on_pushButton_6_clicked()
 {
-    if(send_watcher.isRunning()==false)
+    if(send_watcher.isRunning()==false||lsend_watcher.isRunning()==false)
+    {
         serslot();
+
+        if(mode==WCDMA)
+        {
+            serTimer->setInterval(600000);
+        }
+        else if(mode==LAN)
+        {
+            if(invCount>=7)
+                serTimer->setInterval(600000);
+            else
+                serTimer->setInterval(300000);
+        }
+        else if(mode==LTE)
+        {
+            if(invCount>=7)
+                serTimer->setInterval(600000);
+            else
+                serTimer->setInterval(300000);
+        }
+    }
     else
         QMessageBox::information(this,"nofi","전송중","OK");
+
+
 
 }
 
@@ -114,19 +144,31 @@ void MainWindow::on_pushButton_8_clicked()
 //통신 방법 교환
 void MainWindow::on_pushButton_9_clicked()
 {
-    if(toggle==true)
+    //mode 현재상태
+    if(mode==WCDMA)
     {
-        toggle=false;
+        mode++;
         ui->pushButton_9->setText("LAN");
-        setFileNum("mode.txt",toggle);
+        setFileNum("mode.txt",mode);
 
         serTimer->setInterval(600000);
     }
-    else
+    else if(mode==LAN)
     {
-        toggle=true;
+        mode++;
+        ui->pushButton_9->setText("LTE");
+        setFileNum("mode.txt",mode);
+
+        if(invCount>=7)
+            serTimer->setInterval(600000);
+        else
+            serTimer->setInterval(300000);
+    }
+    else if(mode==LTE)
+    {
+        mode=0;
         ui->pushButton_9->setText("WCD");
-        setFileNum("mode.txt",toggle);
+        setFileNum("mode.txt",mode);
 
         if(invCount>=7)
             serTimer->setInterval(600000);
