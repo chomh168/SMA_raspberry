@@ -38,7 +38,7 @@ void MainWindow::SendLTE()
     //20~23:port
 
     char WSOCO[12]={0x41, 0x54, 0x2B, 0x57, 0x53, 0x4F, 0x43, 0x4F, 0x3D, 0x30, 0x0D};
-    char WSOWR[256]={0x41, 0x54, 0x2B, 0x57, 0x53, 0x4F, 0x57, 0x52, 0x3D, 0x30, 0x2C, 0x36, 0x38, 0x2C};
+    char WSOWR[256]={0x41, 0x54, 0x2B, 0x57, 0x53, 0x4F, 0x57, 0x52, 0x3D, 0x30, 0x2C, 0x31, 0x33, 0x36, 0x2C};
 
     char WSOCL[12]={0x41, 0x54, 0x2B, 0x57, 0x53, 0x4F, 0x43, 0x4C, 0x3D, 0x30, 0x0D};
 
@@ -219,7 +219,7 @@ QString MainWindow::luart_ch(char *ch, int state)
 
     else if(state == 6)
     {
-        QThread::sleep(2);
+        QThread::sleep(1);
 
         while(serialDataAvail(fd)!='\0')
         {
@@ -425,19 +425,19 @@ void MainWindow::lsend_append(char *WSOWR)
             0xaa  //120
             );
 
-        for(int i = 14 ; i<136+14;i++)
+        for(int i = 15 ; i<136+15;i++)
         {
-            WSOWR[i] = buffer[i-14];
+            WSOWR[i] = buffer[i-15];
         }
 
-        WSOWR[150] = 0x0d;
-        WSOWR[151] = 0x0a;
+        WSOWR[151] = 0x0d;
+        WSOWR[152] = 0x0a;
 
         QString feed = uart_ch(WSOWR,6);
 
         if(feed.indexOf("OK") == -1)
         {
-            if(feed.indexOf("5552FFFF")>0)
+            if(feed.indexOf("5552ffff")>0)
             {
                 qDebug()<<"FFFF";
                 reboot=true;
