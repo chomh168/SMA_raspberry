@@ -10,6 +10,9 @@ extern int mode;
 
 extern Inverter* inv[20];
 
+extern int errorCount;
+extern bool errorFlag;
+
 void MainWindow::inv25K(){
     if(selectSendMsgType == 1)
     {
@@ -39,12 +42,41 @@ void MainWindow::inv25K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
+            QFuture<bool> future = QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
+
+            if(future.result()==false&&i==0){
+                errorCount++;
+
+                if(errorCount>30)
+                    errorFlag=true;
+            }
+            else{
+                errorCount=0;
+                errorFlag=false;
+            }
 
             QStandardItem *Item = new QStandardItem(QString::number(inv[i]->totalYeild));
             model->setItem(i,9,Item);
             Item = new QStandardItem(QString::number(inv[i]->dailyYeild));
             model->setItem(i,8,Item);
+
+            if(errorFlag==true){
+                inv[i]->acCurrent=0;
+                inv[i]->acCurrent2=0;
+                inv[i]->acCurrent3=0;
+                inv[i]->acFrequency=0;
+                inv[i]->acPower=0;
+                inv[i]->acVoltage1=0;
+                inv[i]->acVoltage2=0;
+                inv[i]->acVoltage3=0;
+                inv[i]->operatingStatus=0xff;
+                inv[i]->operatingStatus1=0xff;
+                inv[i]->operatingStatus2=0xff;
+                inv[i]->operatingStatus3=0xff;
+                inv[i]->dcCurrent=0;
+                inv[i]->dcVoltage=0;
+                inv[i]->dcPower=0;
+            }
             Item = new QStandardItem(QString::number(inv[i]->acCurrent / 1000));
             model->setItem(i,5,Item);
             Item = new QStandardItem(QString::number(inv[i]->acPower / 1000));
@@ -56,6 +88,7 @@ void MainWindow::inv25K(){
             if(inv[i]->operatingStatus == 0x127) state = "발전";
             else if(inv[i]->operatingStatus == 0x571) state = "정지";
             else if(inv[i]->operatingStatus == 0x5BB) state = "준비";
+            else if(inv[i]->operatingStatus == 0xFF) state = "통신에러";
             else if(first==false)
             {
                state = "ERROR("+QString::number(inv[i]->operatingStatus)+")";
@@ -72,6 +105,7 @@ void MainWindow::inv25K(){
             model->setItem(i,3,Item);
             Item = new QStandardItem(QString::number(0));
             model->setItem(i,7,Item);
+
             QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
             Item = new QStandardItem(time);
             model->setItem(i,10,Item);

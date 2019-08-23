@@ -33,6 +33,9 @@ int mode=0;
 bool reboot=false;
 bool black=false;
 
+int errorCount=0;
+bool errorFlag=false;
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
