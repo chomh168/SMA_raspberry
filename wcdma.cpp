@@ -506,7 +506,7 @@ void MainWindow::send_ok()
     {
         if(sms_watcher.isRunning()==true) QThread::sleep(20);//보통의 루틴 시간
 
-        setFileLog("wcdma error");
+        //setFileLog("wcdma error");
         QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
         send_watcher.setFuture(th5);
     }
@@ -536,7 +536,7 @@ void MainWindow::send_ok()
 
     if(reboot==true)
     {
-        setFileLog("reboot");
+        //setFileLog("reboot");
         system("reboot");
     }
 }

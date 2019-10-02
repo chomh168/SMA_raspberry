@@ -84,7 +84,7 @@ void MainWindow::inv1M(){
             else if(first==false)
             {
                state = "ERROR("+QString::number(inv[i]->operatingStatus)+")";
-               setFileLog(invIP[i]+" "+state);
+               //setFileLog(invIP[i]+" "+state);
             }
             Item = new QStandardItem(state);
             model->setItem(i,0,Item);

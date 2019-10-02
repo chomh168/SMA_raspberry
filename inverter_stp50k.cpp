@@ -94,7 +94,7 @@ void MainWindow::inv50K(){
             else if(first==false)
             {
                state = "ERROR("+QString::number(inv[i]->operatingStatus)+")";
-               setFileLog(invIP[i]+" "+state);
+               //setFileLog(invIP[i]+" "+state);
             }
             Item = new QStandardItem(state);
             model->setItem(i,0,Item);
@@ -174,8 +174,12 @@ bool MainWindow::SendMessage50K(QString ipAddress, int selectSendMsgType, int in
     {
         if (selectSendMsgType == 1)
         {
-            inv[index]->totalYeild = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
+            int tempTotal = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
+            if(tempTotal!=0xFFFFFFFF)
+                inv[index]->totalYeild = tempTotal;
+
             inv[index]->dailyYeild = 0;//(client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
+            //modi
         }
         else if (selectSendMsgType == 2)
         {

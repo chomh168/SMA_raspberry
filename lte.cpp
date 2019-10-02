@@ -92,7 +92,7 @@ void MainWindow::SendLTE()
 
             if(i==0)
             {
-                ;uart_ch(ATE,i);
+                luart_ch(ATE,i);
                 qDebug()<<"ATE";
             }
             else if(i==1)
@@ -481,7 +481,7 @@ void MainWindow::lsend_ok()
     {
         if(sms_watcher.isRunning()==true) QThread::sleep(20);//보통의 루틴 시간
 
-        setFileLog("lte error");
+        //setFileLog("lte error");
         QFuture<void> th5 = QtConcurrent::run(MainWindow::SendLTE);
         lsend_watcher.setFuture(th5);
     }
@@ -511,7 +511,7 @@ void MainWindow::lsend_ok()
 
     if(reboot==true)
     {
-        setFileLog("reboot");
+        //setFileLog("reboot");
         system("reboot");
     }
 }

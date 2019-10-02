@@ -30,7 +30,7 @@ bool TcpClient::TcpConnect(QString server,int port)
     if(!m_socket->waitForConnected(5000)) // 5초 동안 기다림
     {
             qDebug() << "Error: " << m_socket->errorString();
-            setFileLog(server+" "+m_socket->errorString());
+            //setFileLog(server+" "+m_socket->errorString());
 
             return false;
     }
