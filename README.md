@@ -70,14 +70,14 @@
 ### lte.cpp
 - SendLTE : plantNumber에 따른 eeport 번호 분류 7000~7500 : 7777, 7500~8000 : 7778.. (500마다 1씩 증가)
 - 시퀀스
--- ATE : echo가 되지 않도록 설정 
--- CSQ : csq 수치를 요청함
--- STAT : 현재 통신망과 연결 상태 확인
--- RNDISDATA : 데이터 모드 ON/OFF
--- WSOCR : 소켓에 주소와 포트 설정
--- WSOCO : 소켓 Open 설정
--- WSOWR : 데이터 전송 내용 설정
--- WSOCL : 소켓 close 설정
+- ATE : echo가 되지 않도록 설정 
+- CSQ : csq 수치를 요청함
+- STAT : 현재 통신망과 연결 상태 확인
+- RNDISDATA : 데이터 모드 ON/OFF
+- WSOCR : 소켓에 주소와 포트 설정
+- WSOCO : 소켓 Open 설정
+- WSOWR : 데이터 전송 내용 설정
+- WSOCL : 소켓 close 설정
 
 - luart_ch : system("sudo chmod 777 /dev/ttyAMA0") 명령어를 통해 uart로 전송
 - lsend_append : 전송 데이터 바인딩
@@ -87,15 +87,15 @@
 ### wcdma.cpp
 - SendWCDMA : plantNumber에 따른 eeport 번호 분류 7000~7500 : 7777, 7500~8000 : 7778.. (500마다 1씩 증가)
 - 시퀀스
--- ATE : echo가 되지 않도록 설정 
--- CSQ : csq 수치를 요청함
--- TCPTYPE : TCP mode 설정
--- PPPOPEN : 소켓오픈
--- TCPOPEN : 주소와 포트번호 설정
--- TCPWRITE : 서버로 데이터 전송
--- TCPREAD : 서버로부터 데이터 수신
--- TCPCLOSE : 설정한 것을 오프
--- PPPCLOSE : 소켓 오프
+- ATE : echo가 되지 않도록 설정 
+- CSQ : csq 수치를 요청함
+- TCPTYPE : TCP mode 설정
+- PPPOPEN : 소켓오픈
+- TCPOPEN : 주소와 포트번호 설정
+- TCPWRITE : 서버로 데이터 전송
+- TCPREAD : 서버로부터 데이터 수신
+- TCPCLOSE : 설정한 것을 오프
+- PPPCLOSE : 소켓 오프
 
 - uart_ch : system("sudo chmod 777 /dev/ttyAMA0") 명령어를 통해 uart로 전송
 - send_append : 전송 데이터 바인딩
