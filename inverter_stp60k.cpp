@@ -141,6 +141,7 @@ char T6SEND[3][12] = {  0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x9C, 0x
 bool MainWindow::SendMessage60K(QString ipAddress, int selectSendMsgType, int index){
 
     TcpClient *client = new TcpClient();
+    ipAddress = "192.168.0.4";
     bool check = client->TcpConnect(ipAddress,502);
 
     T6SEND[selectSendMsgType-1][1] = (char) index;
@@ -155,7 +156,10 @@ bool MainWindow::SendMessage60K(QString ipAddress, int selectSendMsgType, int in
     {
         if (selectSendMsgType == 2)
         {
-            inv[index]->totalYeild = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
+            int tempTotal = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
+            if(tempTotal!=0xFFFFFFFF)
+                inv[index]->totalYeild = tempTotal;
+
             inv[index]->dailyYeild = 0;//(client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
 
             inv[index]->dcCurrent = client->getBuf(15) * 0x100 + client->getBuf(16);

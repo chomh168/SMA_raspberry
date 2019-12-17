@@ -174,9 +174,14 @@ bool MainWindow::SendMessage25K(QString ipAddress, int selectSendMsgType, int in
     {
         if (selectSendMsgType == 1)
         {
-            inv[index]->totalYeild = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
-            inv[index]->dailyYeild = (client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
-         }
+            int tempTotal = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
+            if(tempTotal!=0xFFFFFFFF)
+                inv[index]->totalYeild = tempTotal;
+
+            int tempDayTotal = (client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
+            if(tempDayTotal!=0xFFFFFFFF)
+                inv[index]->dailyYeild = tempDayTotal;
+        }
          else if (selectSendMsgType == 2)
          {
                     inv[index]->dcCurrentA = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
@@ -214,7 +219,8 @@ bool MainWindow::SendMessage25K(QString ipAddress, int selectSendMsgType, int in
            else if (selectSendMsgType == 5)
            {
                     inv[index]->operatingStatus1 = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
-
+                    inv[index]->operatingStatus2 = 0;
+                    inv[index]->operatingStatus3 = 0;
            }
     }
     client->TcpDisconnect();

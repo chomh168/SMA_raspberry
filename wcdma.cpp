@@ -76,7 +76,7 @@ void MainWindow::SendWCDMA()
         TCPOPEN[25]=0x0D;
         TCPOPEN[26]=0x0A;
 
-    } else if(plantNumber<9500){
+    } else if(plantNumber<10000){
         //7781;
 
         TCPOPEN[23]=0x38;
@@ -297,7 +297,7 @@ QString MainWindow::uart_ch(char *ch, int state)
 void MainWindow::send_append(char *TCPWRITE)
 {
     char buffer[140]={0,};
-    char ccs;
+    char ccs=0;
     //black=0;
 
     bool error_flag = false;
@@ -455,9 +455,9 @@ void MainWindow::send_append(char *TCPWRITE)
             0xaa  //120
             );
 
-        for(int i = 13 ; i<136+13;i++)
+        for(int j = 13 ; j<136+13;j++)
         {
-            TCPWRITE[i] = buffer[i-13];
+            TCPWRITE[j] = buffer[j-13];
         }
 
         TCPWRITE[149] = 0x0d;

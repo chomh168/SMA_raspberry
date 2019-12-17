@@ -20,6 +20,8 @@ void MainWindow::inv50K(){
     {
         for(int i = 0; i<invCount;i++)
         {
+            //if(i==7) QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
+            //else QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
             QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
@@ -28,6 +30,8 @@ void MainWindow::inv50K(){
     {
         for(int i = 0; i<invCount;i++)
         {
+            //if(i==7) QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
+            //else QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
             QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
@@ -36,6 +40,8 @@ void MainWindow::inv50K(){
     {
         for(int i = 0; i<invCount;i++)
         {
+            //if(i==7) QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
+            //else QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
             QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType++;
@@ -44,7 +50,10 @@ void MainWindow::inv50K(){
     {
         for(int i = 0; i<invCount;i++)
         {
-            QFuture<bool> future = QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
+            QFuture<bool> future;
+            //if(i==7) future = QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
+            //else future = QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
+            future = QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
 
             if(future.result()==false&&i==0){
                 errorCount++;
@@ -144,6 +153,8 @@ void MainWindow::inv50K(){
     {
         for(int i = 0; i<invCount;i++)
         {
+            //if(i==7) QtConcurrent::run(MainWindow::SendMessage25K,invIP[i],selectSendMsgType,i);
+            //else QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
             QtConcurrent::run(MainWindow::SendMessage50K,invIP[i],selectSendMsgType,i);
         }
         selectSendMsgType=1;
@@ -220,7 +231,9 @@ bool MainWindow::SendMessage50K(QString ipAddress, int selectSendMsgType, int in
         else if (selectSendMsgType == 4)
         {
             inv[index]->operatingStatus = client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12);
-
+            inv[index]->operatingStatus1 = 0;
+            inv[index]->operatingStatus2 = 0;
+            inv[index]->operatingStatus3 = 0;
         }
 
         else if (selectSendMsgType == 5)

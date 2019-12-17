@@ -37,7 +37,7 @@ void MainWindow::SendServerHstec()
     } else if(plantNumber<9000){
         eeport = 7780;
 
-    } else if(plantNumber<9500){
+    } else if(plantNumber<10000){
         eeport = 7781;
 
     }

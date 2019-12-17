@@ -79,14 +79,12 @@ void TcpClient::sendRequst(char buffer[],int size)
 void TcpClient::readMessage(void)
 {
 
-    char chr;
-
     if(!m_socket->bytesAvailable())
     {
         m_socket->waitForReadyRead(3000); // 3초 동안 기다림
         QByteArray baMessage = m_socket->readAll();
 
-
+        char chr;
         for(int index = 0; index < baMessage.count();index++)
         {
             chr = baMessage.at(index);
