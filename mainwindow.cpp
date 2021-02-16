@@ -110,7 +110,7 @@ MainWindow::MainWindow(QWidget *parent) :
     pinMode(7,INPUT); // 정전 감지 센서
 
     pinMode(0,OUTPUT);
-    digitalWrite(0,0); //리셋 신호(HW)
+    digitalWrite(0,1); //리셋 신호(HW)
 
 
     QFuture<QString> th1 = QtConcurrent::run(MainWindow::req_csq);
@@ -263,9 +263,9 @@ void MainWindow::cheslot()
     if(digitalRead(1)==1)
     {
         qDebug()<<"jj : "<<(1);
-        digitalWrite(0,(1)); //외부 버튼을 이용한 리셋 기능
+        digitalWrite(0,(0)); //외부 버튼을 이용한 리셋 기능
         QThread::sleep(1);
-        digitalWrite(0,(0));
+        digitalWrite(0,(1));
     }
 
 
@@ -273,13 +273,17 @@ void MainWindow::cheslot()
     {
         black = true;
         if(mode==WCDMA){
-            SendWCDMA();
+            //SendWCDMA();
+            QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+            send_watcher.setFuture(th5);
         }
         else if(mode==LAN){
             SendServerHstec();
         }
         else{
-            SendLTE();
+            //SendLTE();
+            QFuture<void> th5 = QtConcurrent::run(MainWindow::SendLTE);
+            lsend_watcher.setFuture(th5);
         }
     }
 
@@ -287,13 +291,17 @@ void MainWindow::cheslot()
     {
         black = false;
         if(mode==WCDMA){
-            SendWCDMA();
+            //SendWCDMA();
+            QFuture<void> th5 = QtConcurrent::run(MainWindow::SendWCDMA);
+            send_watcher.setFuture(th5);
         }
         else if(mode==LAN){
             SendServerHstec();
         }
         else{
-            SendLTE();
+            //SendLTE();
+            QFuture<void> th5 = QtConcurrent::run(MainWindow::SendLTE);
+            lsend_watcher.setFuture(th5);
         }
     }
 

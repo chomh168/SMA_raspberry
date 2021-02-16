@@ -102,13 +102,13 @@ void MainWindow::SendLTE()
             }
             else if(i==2)
             {
-                luart_ch(STAT,i);
+                //luart_ch(STAT,i);
                 qDebug()<<"AUTOCONN";
             }
             else if(i==3)
             {
                 RNDISDATA[13]=0x31;
-                luart_ch(RNDISDATA,i);
+                //luart_ch(RNDISDATA,i);
                 qDebug()<<"RNDISDATA OPEN";
             }
             else if(i==4)
@@ -135,7 +135,7 @@ void MainWindow::SendLTE()
             else if(i==8)
             {
                 RNDISDATA[13]=0x30;
-                luart_ch(RNDISDATA,i);
+                //luart_ch(RNDISDATA,i);
                 qDebug()<<"RNDISDATA OFF";
 
             }
@@ -188,7 +188,7 @@ QString MainWindow::luart_ch(char *ch, int state)
         return lcsq;
     }
 
-    else if(state == 3 || state == 4 || state == 5)
+    else if(state == 4 || state == 5)
     {
         QThread::sleep(1);
         while(serialDataAvail(fd)!='\0')
@@ -248,6 +248,9 @@ QString MainWindow::luart_ch(char *ch, int state)
         serialFlush(fd);
         serialClose(fd);
 
+        return 0;
+    }
+    else if(state == 3 || state == 2 || state == 8){
         return 0;
     }
 
@@ -435,17 +438,24 @@ void MainWindow::lsend_append(char *WSOWR)
 
         QString feed = uart_ch(WSOWR,6);
 
-        if(feed.indexOf("OK") == -1)
-        {
+
             if(feed.indexOf("5552ffff")>0)
             {
                 qDebug()<<"FFFF";
                 reboot=true;
             }
+            else if(feed.indexOf("55520000")>0)
+            {
+                qDebug()<<"0000";
 
-            error_flag |= true;
-            break; 
-        }
+            }
+            else{
+                error_flag |= true;
+                break;
+            }
+
+
+
 
     }
 
@@ -487,22 +497,23 @@ void MainWindow::lsend_ok()
     }
     else
     {
+
         ui->textBrowser->clear();
         if(lcount_error==false){
             ui->textBrowser->append("LTE send ok!!");
-            digitalWrite(0,0);
+            digitalWrite(0,1);
 
             lcheck_count=0;
         }
         else {
             ui->textBrowser->append("LTE send error");
             lcheck_count++;
-
+            //digitalWrite(0,1);
             if(lcheck_count==4)
             {
-                digitalWrite(0,(1)); //외부 버튼을 이용한 리셋 기능
+                digitalWrite(0,(0)); //외부 버튼을 이용한 리셋 기능
                 QThread::sleep(1);
-                digitalWrite(0,(0));
+                digitalWrite(0,(1));
                 lcheck_count=0;
             }
 

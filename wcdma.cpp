@@ -515,7 +515,7 @@ void MainWindow::send_ok()
         ui->textBrowser->clear();
         if(count_error==false){
             ui->textBrowser->append("WCDMA send ok!!");
-            digitalWrite(0,0);
+            digitalWrite(0,1);
 
             check_count=0;
         }
@@ -525,9 +525,9 @@ void MainWindow::send_ok()
 
             if(check_count==4)
             {
-                digitalWrite(0,(1)); //외부 버튼을 이용한 리셋 기능
+                digitalWrite(0,(0)); //외부 버튼을 이용한 리셋 기능
                 QThread::sleep(1);
-                digitalWrite(0,(0));
+                digitalWrite(0,(1));
                 check_count=0;
             }
 

@@ -13,6 +13,8 @@ extern Inverter* inv[20];
 extern int errorCount;
 extern bool errorFlag;
 
+int list[10] = {0x86, 0x7e, 0x7f, 0x84, 0x83, 0x82, 0x80, 0x85, 0x87, 0x81};
+
 void MainWindow::inv60K(){
 
     //50K STP
@@ -79,10 +81,7 @@ void MainWindow::inv60K(){
             model->setItem(i,4,Item);
 
             QString state="Null";
-            if(inv[i]->operatingStatus == 0x127) state = "발전";
-            else if(inv[i]->operatingStatus == 0xFFFD) state = "정지";
-            else if(inv[i]->operatingStatus == 0x5BB) state = "준비";
-            else if(inv[i]->operatingStatus == 0xFF) state = "통신에러";
+            if(inv[i]->operatingStatus == 0xffff) state = "정상";
             else if(first==false)
             {
                state = "ERROR("+QString::number(inv[i]->operatingStatus)+")";
@@ -134,23 +133,37 @@ void MainWindow::inv60K(){
 }
 
 //60K STP
-char T6SEND[3][12] = {  0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x9C, 0xFE, 0x00, 0x0F, // AC Input A,V,W Fre (40189)
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x9D, 0x11, 0x00, 0x08, // DC Input A,V,W Total (40210)
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x03, 0x04, 0x9D, 0x1F, 0x00, 0x03};// Operating status (40224)
+
+
 
 bool MainWindow::SendMessage60K(QString ipAddress, int selectSendMsgType, int index){
 
+    char T6SEND[3][12] = {  0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x7e, 0x03, 0x9C, 0xFC, 0x00, 0x0F, // AC Input A,V,W Fre (40189)
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x7e, 0x03, 0x9D, 0x11, 0x00, 0x08, // DC Input A,V,W Total (40210)
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x7e, 0x03, 0x9D, 0x1F, 0x00, 0x03};// Operating status (40224)
+
+
     TcpClient *client = new TcpClient();
-    ipAddress = "192.168.0.4";
+    ipAddress = "192.168.0.3";
     bool check = client->TcpConnect(ipAddress,502);
+    QMutex mutex;
 
     T6SEND[selectSendMsgType-1][1] = (char) index;
+
+    mutex.lock();
+
+    for(int i = 0; i<3 ; i++)
+    {
+        T6SEND[i][6] = list[index];
+    }
 
     client->onConnectServer();
     client->sendRequst(T6SEND[selectSendMsgType-1],sizeof(T6SEND[selectSendMsgType-1]));
 
-
     client->readMessage();
+
+    mutex.unlock();
+
 
     if(check==true)
     {
@@ -158,24 +171,34 @@ bool MainWindow::SendMessage60K(QString ipAddress, int selectSendMsgType, int in
         {
             int tempTotal = (client->getBuf(9) * 0x1000000 + client->getBuf(10) * 0x10000 + client->getBuf(11) * 0x100 + client->getBuf(12));
             if(tempTotal!=0xFFFFFFFF)
-                inv[index]->totalYeild = tempTotal;
+                inv[index]->totalYeild = tempTotal/1000;
 
             inv[index]->dailyYeild = 0;//(client->getBuf(21) * 0x1000000 + client->getBuf(22) * 0x10000 + client->getBuf(23) * 0x100 + client->getBuf(24));
 
             inv[index]->dcCurrent = client->getBuf(15) * 0x100 + client->getBuf(16);
-            inv[index]->dcVoltage = client->getBuf(17) * 0x100 + client->getBuf(18);
-            inv[index]->dcPower = client->getBuf(19) * 0x100 + client->getBuf(20);
+            inv[index]->dcCurrent *= 10;
+            inv[index]->dcVoltage = client->getBuf(19) * 0x100 + client->getBuf(20);
+            inv[index]->dcVoltage *= 10;
+            inv[index]->dcPower = client->getBuf(23) * 0x100 + client->getBuf(24);
+            inv[index]->dcPower *= 10;
         }
         else if (selectSendMsgType == 1)
         {
             inv[index]->acPower = client->getBuf(31) * 0x100 + client->getBuf(32);
+            inv[index]->acPower *= 10;
             inv[index]->acVoltage1 = client->getBuf(23) * 0x100 + client->getBuf(24) == 65535 ? 0 : client->getBuf(23) * 0x100 + client->getBuf(24);// * qSqrt(3));
+            inv[index]->acVoltage1 *= 10;
             inv[index]->acVoltage2 = client->getBuf(25) * 0x100 + client->getBuf(26) == 65535 ? 0 : client->getBuf(25) * 0x100 + client->getBuf(26);// * qSqrt(3));
+            inv[index]->acVoltage2 *= 10;
             inv[index]->acVoltage3 = client->getBuf(27) * 0x100 + client->getBuf(28) == 65535 ? 0 : client->getBuf(27) * 0x100 + client->getBuf(28);// * qSqrt(3));
+            inv[index]->acVoltage3 *= 10;
 
             inv[index]->acCurrent = client->getBuf(9) * 0x100 + client->getBuf(10) == 65535 ? 0 : client->getBuf(9) * 0x100 + client->getBuf(10);
+            inv[index]->acCurrent *= 10;
             inv[index]->acCurrent2 = client->getBuf(11) * 0x100 + client->getBuf(12) == 65535 ? 0 : client->getBuf(11) * 0x100 + client->getBuf(12);
+            inv[index]->acCurrent2 *= 10;
             inv[index]->acCurrent3 = client->getBuf(13) * 0x100 + client->getBuf(14) == 65535 ? 0 : client->getBuf(13) * 0x100 + client->getBuf(14);
+            inv[index]->acCurrent3 *= 10;
 
             inv[index]->acFrequency = client->getBuf(35) * 0x100 + client->getBuf(36) == 65535 ? 0 : client->getBuf(35) * 0x100 + client->getBuf(36);
 
@@ -185,6 +208,8 @@ bool MainWindow::SendMessage60K(QString ipAddress, int selectSendMsgType, int in
         {
             inv[index]->operatingStatus = client->getBuf(9) * 0x100 + client->getBuf(10);
             inv[index]->operatingStatus1 = client->getBuf(11) * 0x100 + client->getBuf(12);
+            inv[index]->operatingStatus2 = 0;
+            inv[index]->operatingStatus3 = 0;
         }
     }
     client->TcpDisconnect();

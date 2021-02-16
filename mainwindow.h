@@ -16,6 +16,7 @@
 #include <QFutureWatcher>
 #include <QStandardItemModel>
 #include <QDateTime>
+#include <mutex>
 
 namespace Ui {
     class MainWindow;
