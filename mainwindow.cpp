@@ -10,7 +10,8 @@ enum{
     STP25K=0,
     STP50K,
     SC1M,
-    STP60K
+    STP60K,
+    SANREX
 };
 
 
@@ -191,6 +192,12 @@ void MainWindow::invslot()
     {
         inv60K();
     }
+
+    //SANREX
+    else if(capacity==SANREX)
+    {
+        SANREX();
+    }
 }
 
 //메세지를 담는 부분
@@ -220,7 +227,10 @@ bool MainWindow::SendMessage(QString ipAddress, int selectSendMsgType, int index
             return SendMessage60K(ipAddress,selectSendMsgType,index);
         }
 
-
+        else if(capacity==SANREX)
+        {
+            return SendMessageSANREX(ipAddress,selectSendMsgType,index);
+        }
 
     return true;
 }
@@ -248,6 +258,12 @@ void MainWindow::on_comboBox_activated(const QString &arg1)
     {
         QMessageBox::information(this,"info",arg1,"OK");
         capacity=3;
+    }
+
+    else if (arg1 == "SANREX")
+    {
+        QMessageBox::information(this,"info",arg1,"OK");
+        capacity=4;
     }
 
     setFileNum("capacity.txt",capacity);
