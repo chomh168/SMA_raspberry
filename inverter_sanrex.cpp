@@ -173,21 +173,36 @@ QString MainWindow::uart_ch_usb(char *ch, int invno)
 
     if(count==91){
         if(rxbuffer[0]=='M' && rxbuffer[1]=='N'){
-            inv[invno]->dcVoltage = HexString_to_int(rxbuffer[73],rxbuffer[74],rxbuffer[75],rxbuffer[76]); // /10
-            inv[invno]->dcCurrent = HexString_to_int(rxbuffer[78],rxbuffer[79],rxbuffer[80],rxbuffer[81]); // /10
-            inv[invno]->dcPower = inv[invno]->dcVoltage * inv[invno]->dcCurrent; // /100
+            inv[invno]->dcVoltage = HexString_to_int(rxbuffer[73],rxbuffer[74],rxbuffer[75],rxbuffer[76]) / 10; // /10
+            inv[invno]->dcCurrent = HexString_to_int(rxbuffer[78],rxbuffer[79],rxbuffer[80],rxbuffer[81]) / 10; // /10
+            inv[invno]->dcPower = (inv[invno]->dcVoltage * inv[invno]->dcCurrent); // /1000
 
-            inv[invno]->acVoltage1 = HexString_to_int(rxbuffer[58],rxbuffer[59],rxbuffer[60],rxbuffer[61]);
+            inv[invno]->dcVoltage *= 100;
+            inv[invno]->dcCurrent *= 1000;
+
+            inv[invno]->acVoltage1 = HexString_to_int(rxbuffer[58],rxbuffer[59],rxbuffer[60],rxbuffer[61]) / 10;
             inv[invno]->acVoltage2 = inv[invno]->acVoltage1;
             inv[invno]->acVoltage3 = inv[invno]->acVoltage1;
+
+            inv[invno]->acVoltage1 *= 100;
+            inv[invno]->acVoltage2 *= 100;
+            inv[invno]->acVoltage3 *= 100;
 
             inv[invno]->acCurrent  = HexString_to_int(rxbuffer[3],rxbuffer[4],rxbuffer[5],rxbuffer[6]);
             inv[invno]->acCurrent2 = inv[invno]->acCurrent;
             inv[invno]->acCurrent3 = inv[invno]->acCurrent;
 
+            inv[invno]->acCurrent  *= 1000;
+            inv[invno]->acCurrent2 *= 1000;
+            inv[invno]->acCurrent3 *= 1000;
+
             inv[invno]->acPower = HexString_to_int(rxbuffer[8],rxbuffer[9],rxbuffer[10],rxbuffer[11]);
 
+            inv[invno]->acPower *= 100;
+
             inv[invno]->acFrequency = HexString_to_int(rxbuffer[48],rxbuffer[49],rxbuffer[50],rxbuffer[51]);
+
+            inv[invno]->acFrequency *= 10;
 
             inv[invno]->operatingStatus  = HexString_to_int(rxbuffer[83],rxbuffer[84],rxbuffer[85],rxbuffer[86]);
             inv[invno]->operatingStatus1 = inv[invno]->operatingStatus;
@@ -195,7 +210,12 @@ QString MainWindow::uart_ch_usb(char *ch, int invno)
             inv[invno]->operatingStatus3 = inv[invno]->operatingStatus;
 
             inv[invno]->totalYeild = HexString_to_int(rxbuffer[18],rxbuffer[19],rxbuffer[20],rxbuffer[21]);
+            inv[invno]->totalYeild <<= 16;
+            inv[invno]->totalYeild = HexString_to_int(rxbuffer[23],rxbuffer[24],rxbuffer[25],rxbuffer[26]);
+            inv[invno]->totalYeild /= 10;
+
             inv[invno]->dailyYeild = HexString_to_int(rxbuffer[28],rxbuffer[29],rxbuffer[30],rxbuffer[31]);
+            inv[invno]->dailyYeild /= 10;
         }
     }
 
